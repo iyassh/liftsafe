@@ -307,7 +307,9 @@ function onFrame(lms, now) {
   state.lastFrameAt = now;
   const tone = state.screen === 'positioning'
     ? framePositioning(problem, now)
-    : frameLifting(m, problem, now);
+    // Once in position, only an unseeable body stops scoring. The stricter checks misfire on a
+    // bent-over worker: a real session read "turn sideways" and "too close" mid-lift.
+    : frameLifting(m, m?.visible ? null : problem, now);
 
   ctx.clearRect(0, 0, el.canvas.width, el.canvas.height);
   if (lms) drawSkeleton(lms, COLOR[tone]);
