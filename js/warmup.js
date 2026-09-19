@@ -33,7 +33,7 @@ const el = {
   holdProgress: $('holdProgress'), holdSeconds: $('holdSeconds'), holdFill: $('holdFill'),
   skipBtn: $('skipBtn'), voiceBtn: $('voiceBtn'),
   doneName: $('doneName'), doneTime: $('doneTime'), doneStreak: $('doneStreak'), doneMoves: $('doneMoves'),
-  saveError: $('saveError'), retrySaveBtn: $('retrySaveBtn'), liftLink: $('liftLink'), doneHomeLink: $('doneHomeLink'),
+  saveError: $('saveError'), retrySaveBtn: $('retrySaveBtn'), liftLink: $('liftLink'), doneHomeLink: $('doneHomeLink'), who: $('who'),
   debug: $('debug'),
 };
 const ctx = el.canvas.getContext('2d');
@@ -413,7 +413,7 @@ function renderDone() {
   el.doneName.textContent = state.name;
   const time = new Date(state.checkedInAt).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
   el.doneTime.textContent = `Checked in at ${time}`;
-  el.liftLink.href = `check.html?name=${encodeURIComponent(state.name)}`;
+  if (!kioskWorker) el.liftLink.href = `check.html?guest=1&name=${encodeURIComponent(state.name)}`;
 
   const items = state.results.map((result) => {
     const li = document.createElement('li');
@@ -487,8 +487,15 @@ const kioskWorker = currentSession(Date.now())?.role === 'worker' ? currentSessi
 if (kioskWorker) {
   el.nameInput.value = kioskWorker.name;
   el.nameInput.readOnly = true;
+  // One obvious way out on a shared device: Done returns to the kiosk, which signs them out.
+  el.liftLink.href = 'app.html';
+  el.liftLink.textContent = 'Done';
   el.doneHomeLink.href = 'worker.html';
-  el.doneHomeLink.textContent = 'Back to my page';
+  el.doneHomeLink.textContent = 'Back to my training';
+  el.who.textContent = kioskWorker.name;
+} else {
+  el.liftLink.textContent = 'Try the lift check';
+  el.who.textContent = 'Guest';
 }
 el.nameInput.addEventListener('input', syncStartButton);
 el.nameForm.addEventListener('submit', (e) => {
@@ -509,5 +516,7 @@ renderPackLine();
 renderVoiceButton();
 syncStartButton();
 go('name');
+// Signed in at the kiosk: they already said who they are, so go straight to the first question.
+if (kioskWorker) begin();
 // Warm the model while the worker types their name; a failure is reported when the camera opens.
 createLandmarker().catch(() => {});

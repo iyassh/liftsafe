@@ -16,36 +16,62 @@
     </header>
 
     <main id="app">
-      <!-- First run: set the business up on this device. -->
+      <!-- First run: see the demo, or set the business up in three short steps. -->
+      <section class="welcome" id="screen-welcome" hidden>
+        <p class="eyebrow">Welcome</p>
+        <h1>Let's get this device ready</h1>
+        <p class="muted lead">LiftSafe runs on one shared screen at the start of the shift. Pick how you want to begin.</p>
+        <div class="choices">
+          <button class="choice card" type="button" id="loadDemo">
+            <span class="choice-title">See the demo</span>
+            <span class="muted">A made-up moving company with a team and a few weeks of records. Ready in one tap.</span>
+            <span class="btn">Open the demo</span>
+          </button>
+          <button class="choice card" type="button" id="startSetup">
+            <span class="choice-title">Set up my business</span>
+            <span class="muted">Three short steps: your business, a manager PIN, your team. About a minute.</span>
+            <span class="btn btn-ghost">Start setup</span>
+          </button>
+        </div>
+        <p class="form-error text-bad" id="welcomeError" role="alert" hidden></p>
+      </section>
+
       <section class="card setup" id="screen-setup" hidden>
-        <h1>Set up this device</h1>
-        <p class="muted">Takes about a minute. Everything stays on this device.</p>
-
+        <p class="steps" id="stepLabel"></p>
         <form id="setupForm" novalidate>
-          <label for="bizName">Business name</label>
-          <input type="text" id="bizName" maxlength="60" autocomplete="off" placeholder="Hillside Movers">
+          <div id="step-1">
+            <h1>Your business</h1>
+            <label for="bizName">Business name</label>
+            <input type="text" id="bizName" maxlength="60" autocomplete="off" placeholder="Hillside Movers">
+            <label for="bizPack">What kind of work?</label>
+            <select id="bizPack"></select>
+            <p class="muted small">This picks the warm-up movements. You can change it later.</p>
+          </div>
 
-          <label for="bizPack">Business type</label>
-          <select id="bizPack"></select>
+          <div id="step-2" hidden>
+            <h1>Manager PIN</h1>
+            <p class="muted">Four digits. It opens the dashboard, the team list and settings.</p>
+            <label for="mgrPin">Manager PIN</label>
+            <input type="text" id="mgrPin" class="pin-input" inputmode="numeric" maxlength="4" autocomplete="off" placeholder="••••">
+          </div>
 
-          <label for="mgrPin">Manager PIN <span class="muted">(4 digits)</span></label>
-          <input type="text" id="mgrPin" class="pin-input" inputmode="numeric" maxlength="4" autocomplete="off" placeholder="••••">
-
-          <h2>Your team</h2>
-          <ul class="team-list" id="teamList"></ul>
-          <div class="add-row">
-            <input type="text" id="newName" maxlength="60" autocomplete="off" placeholder="Team member name" aria-label="Team member name">
-            <input type="text" id="newPin" class="pin-input" inputmode="numeric" maxlength="4" autocomplete="off" placeholder="PIN" aria-label="PIN, 4 digits">
-            <button class="btn btn-ghost" type="button" id="addWorkerBtn">Add</button>
+          <div id="step-3" hidden>
+            <h1>Your team</h1>
+            <p class="muted">Add each person and give them a 4-digit PIN. You can add more later.</p>
+            <ul class="team-list" id="teamList"></ul>
+            <div class="add-row">
+              <input type="text" id="newName" maxlength="60" autocomplete="off" placeholder="Name" aria-label="Team member name">
+              <input type="text" id="newPin" class="pin-input" inputmode="numeric" maxlength="4" autocomplete="off" placeholder="PIN" aria-label="PIN, 4 digits">
+              <button class="btn btn-ghost" type="button" id="addWorkerBtn">Add</button>
+            </div>
           </div>
 
           <p class="form-error text-bad" id="setupError" role="alert" hidden></p>
-          <button class="btn btn-big" type="submit" id="finishSetup">Finish setup</button>
+          <div class="wizard-nav">
+            <button class="btn btn-ghost" type="button" id="backBtn">Back</button>
+            <button class="btn" type="submit" id="nextBtn">Next</button>
+          </div>
         </form>
-
-        <div class="or"><span>or</span></div>
-        <button class="btn btn-ghost btn-big" type="button" id="loadDemo">Load demo business</button>
-        <p class="muted small">A made-up team with a few weeks of records, to see how it works.</p>
       </section>
 
       <!-- Every shift: who is starting? -->

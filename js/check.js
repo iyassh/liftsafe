@@ -32,7 +32,7 @@ const el = {
   liftCount: $('liftCount'), dots: $('dots'), lastScore: $('lastScore'), tip: $('tip'),
   resultName: $('resultName'), sessionScore: $('sessionScore'), verdict: $('verdict'),
   liftScores: $('liftScores'), topFaultLabel: $('topFaultLabel'), topFaultTip: $('topFaultTip'),
-  saveBtn: $('saveBtn'), againBtn: $('againBtn'), saved: $('saved'), savedMsg: $('savedMsg'),
+  saveBtn: $('saveBtn'), againBtn: $('againBtn'), doneBtn: $('doneBtn'), who: $('who'), saved: $('saved'), savedMsg: $('savedMsg'),
   dashLink: $('dashLink'),
   debug: $('debug'),
 };
@@ -421,6 +421,8 @@ function renderPanel() {
 function renderResults() {
   const summary = summariseSession(state.scored);
   state.summary = summary;
+  // At the kiosk the record saves by itself and there is one way out; a guest chooses whether to save.
+  if (kioskWorker) queueMicrotask(() => { saveRecord(); el.saveBtn.hidden = true; el.doneBtn.hidden = false; });
   devLog.event('session', { summary });
   const tone = band(summary.score);
 
@@ -510,7 +512,13 @@ if (kioskWorker) {
   el.nameInput.value = kioskWorker.name;
   el.nameInput.readOnly = true;
   el.dashLink.href = 'worker.html';
-  el.dashLink.textContent = 'Back to my page →';
+  el.dashLink.textContent = 'Back to my training →';
+  el.who.textContent = kioskWorker.name;
+} else {
+  // A guest cannot open the manager's dashboard, so the way out is the kiosk.
+  el.dashLink.href = 'app.html';
+  el.dashLink.textContent = 'Back to shift start →';
+  el.who.textContent = 'Guest';
 }
 el.nameInput.addEventListener('input', syncStartButton);
 el.nameForm.addEventListener('submit', (e) => {
@@ -526,5 +534,7 @@ el.video.addEventListener('resize', syncCanvasSize);
 el.debug.hidden = !debugOn;
 syncStartButton();
 go('name');
+// Signed in at the kiosk: they already said who they are, so go straight to the camera.
+if (kioskWorker) begin();
 // Warm the model while the worker types their name; a failure is reported on Start.
 getLandmarker().catch(() => {});

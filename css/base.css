@@ -76,3 +76,6 @@ input[type='text'] {
 input[type='text']:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
 
 [hidden] { display: none !important; }
+
+.who { color: var(--muted); font-size: 0.95rem; font-weight: 600; }
+.who:empty { display: none; }

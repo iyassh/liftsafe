@@ -11,12 +11,8 @@
 <body>
   <div class="wrap">
     <header class="topbar">
-      <a class="brand" href="index.html">Lift<span>Safe</span></a>
-      <nav class="nav" aria-label="Main">
-        <a href="check.html" aria-current="page">Lift check</a>
-        <a href="warmup.html">Warm-up</a>
-        <a href="dashboard.html">Dashboard</a>
-      </nav>
+      <a class="brand" href="app.html">Lift<span>Safe</span></a>
+      <span class="who" id="who"></span>
       <span class="badge">🔒 Video never leaves this device</span>
     </header>
 
@@ -74,6 +70,7 @@
           <p class="top-fault-tip" id="topFaultTip"></p>
         </div>
         <div class="result-actions">
+          <a class="btn btn-big" id="doneBtn" href="app.html" hidden>Done</a>
           <button type="button" class="btn btn-big" id="saveBtn">Save record</button>
           <button type="button" class="btn btn-ghost btn-big" id="againBtn">Try again</button>
         </div>

@@ -26,8 +26,7 @@ function el(tag, className, text) {
 }
 
 function show(screen) {
-  $('screen-setup').hidden = screen !== 'setup';
-  $('screen-kiosk').hidden = screen !== 'kiosk';
+  for (const name of ['welcome', 'setup', 'kiosk']) $(`screen-${name}`).hidden = name !== screen;
 }
 
 // ---------- setup ----------
@@ -65,16 +64,42 @@ async function addDraftWorker() {
   $('newName').focus();
 }
 
-async function finishSetup(e) {
+// Setup is three short steps, so no screen asks for more than one thing.
+const STEPS = 3;
+let step = 1;
+
+function showStep(n) {
+  step = n;
+  for (let i = 1; i <= STEPS; i += 1) $(`step-${i}`).hidden = i !== n;
+  $('stepLabel').textContent = `Step ${n} of ${STEPS}`;
+  $('nextBtn').textContent = n === STEPS ? 'Finish' : 'Next';
+  showSetupError(null);
+  show('setup');
+  ({ 1: $('bizName'), 2: $('mgrPin'), 3: $('newName') })[n].focus();
+}
+
+// Returns an error message, or null when the step is complete.
+function stepProblem(n) {
+  if (n === 1 && !$('bizName').value.trim()) return 'Enter your business name.';
+  if (n === 2 && !validPin($('mgrPin').value)) return 'The manager PIN is 4 digits.';
+  if (n === 3 && !draftTeam.length) return 'Add at least one team member.';
+  return null;
+}
+
+async function nextStep(e) {
   e.preventDefault();
-  const name = $('bizName').value.trim();
-  const managerPin = $('mgrPin').value;
-  if (!name) return showSetupError('Enter your business name.');
-  if (!validPin(managerPin)) return showSetupError('The manager PIN is 4 digits.');
-  if ($('newName').value.trim()) await addDraftWorker();
-  if (!draftTeam.length) return showSetupError('Add at least one team member.');
+  // A name typed but not yet added still counts.
+  if (step === STEPS && $('newName').value.trim()) await addDraftWorker();
+  const problem = stepProblem(step);
+  if (problem) return showSetupError(problem);
+  if (step < STEPS) return showStep(step + 1);
+  return finishSetup();
+}
+
+async function finishSetup() {
   try {
-    let db = setBusiness({ ...load(), pack: $('bizPack').value }, { name, managerPin: await makePin(managerPin) });
+    const business = { name: $('bizName').value.trim(), managerPin: await makePin($('mgrPin').value) };
+    let db = setBusiness({ ...load(), pack: $('bizPack').value }, business);
     for (const w of draftTeam) db = addWorker(db, w);
     save(db);
   } catch (err) {
@@ -88,7 +113,9 @@ function loadDemo() {
   try {
     save({ ...mergeSample(load(), Date.now()), business: DEMO_BUSINESS });
   } catch (err) {
-    return showSetupError(`Could not save to this device: ${err.message}`);
+    $('welcomeError').hidden = false;
+    $('welcomeError').textContent = `Could not save to this device: ${err.message}`;
+    return;
   }
   renderKiosk();
 }
@@ -106,8 +133,10 @@ function initSetup() {
     e.preventDefault();
     addDraftWorker();
   });
-  $('setupForm').addEventListener('submit', finishSetup);
+  $('setupForm').addEventListener('submit', nextStep);
   $('loadDemo').addEventListener('click', loadDemo);
+  $('startSetup').addEventListener('click', () => showStep(1));
+  $('backBtn').addEventListener('click', () => (step === 1 ? show('welcome') : showStep(step - 1)));
 }
 
 // ---------- kiosk ----------
@@ -128,7 +157,7 @@ function workerTile(w, now) {
 
 function renderKiosk() {
   const db = load();
-  if (!db.business) return show('setup');
+  if (!db.business) return show('welcome');
   const now = Date.now();
   const roster = db.workers.filter((w) => typeof w.id === 'string').sort((a, b) => a.name.localeCompare(b.name));
   $('bizTitle').textContent = db.business.name;

@@ -12,12 +12,8 @@
 <body>
   <div class="wrap">
     <header class="topbar">
-      <a class="brand" href="index.html">Lift<span>Safe</span></a>
-      <nav class="nav" aria-label="Main">
-        <a href="check.html">Lift check</a>
-        <a href="warmup.html">Warm-up</a>
-        <a href="dashboard.html" aria-current="page">Dashboard</a>
-      </nav>
+      <a class="brand" href="app.html">Lift<span>Safe</span></a>
+      <span class="who" id="who"></span>
       <span class="badge">🔒 Video never leaves this device</span>
     </header>
 
@@ -36,15 +32,10 @@
     <main>
       <div class="dash-head">
         <div>
-          <h1>Training records</h1>
+          <p class="eyebrow" id="bizTitle"></p>
+          <h1>Team training</h1>
           <p class="muted" id="interval"></p>
         </div>
-        <div class="pack-field">
-          <label for="pack">Business type</label>
-          <select id="pack"></select>
-          <p class="muted">Sets the warm-up movements for this site.</p>
-        </div>
-        <a class="btn" href="check.html">Start a lift check</a>
       </div>
 
       <section class="card alerts" id="alerts" aria-labelledby="alerts-title" hidden>
@@ -58,17 +49,12 @@
 
       <section class="today" id="today" aria-labelledby="today-title" hidden>
         <div class="section-head">
-          <h2 id="today-title">Today's shift start</h2>
+          <h2 id="today-title">Today</h2>
           <p class="muted" id="today-date"></p>
         </div>
         <div class="tiles" id="today-tiles"></div>
         <p class="muted section-note">Soreness is self-reported so you can check in with them. It never blocks anyone from working.</p>
       </section>
-
-      <div class="section-head">
-        <h2 id="cert-title">Team training</h2>
-      </div>
-      <section class="tiles" id="tiles" aria-labelledby="cert-title"></section>
 
       <section class="card empty" id="empty" hidden>
         <h2>No training records yet</h2>

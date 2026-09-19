@@ -102,3 +102,15 @@ h2 { font-size: 1.25rem; margin: 28px 0 10px; }
 /* ---------- search ---------- */
 .find-name { max-width: 420px; margin-bottom: 16px; }
 .roster + p, #findMember { margin-bottom: 6px; }
+
+/* ---------- first run ---------- */
+.welcome { max-width: 860px; margin: 32px auto; }
+.lead { font-size: 1.15rem; max-width: 56ch; }
+.choices { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; margin-top: 26px; }
+.choice { display: flex; flex-direction: column; align-items: flex-start; gap: 12px; padding: 26px; text-align: left; font: inherit; color: var(--text); cursor: pointer; }
+.choice:hover, .choice:focus-visible { border-color: var(--accent); outline: none; }
+.choice-title { font-size: 1.5rem; font-weight: 800; }
+.choice .btn { margin-top: 6px; pointer-events: none; }
+.steps { margin: 0 0 6px; color: var(--accent); font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; font-size: 0.85rem; }
+.wizard-nav { display: flex; justify-content: space-between; gap: 12px; margin-top: 26px; }
+.setup h1 { font-size: 2rem; }

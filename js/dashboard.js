@@ -100,23 +100,16 @@ function renderToday(db, now) {
   const best = longestStreak(db, now);
   const flags = t.soreness.map((f) => `${f.name} · ${SORENESS[f.area] ?? SORENESS.other}`);
   document.getElementById('today-date').textContent = `${WEEKDAYS[new Date(now).getDay()]} ${formatDate(now)}`;
+  const sum = summary(db, now);
+  const needs = tracked(db).filter((w) => ['overdue', 'retake'].includes(trainingStatus(w, 'liftCert', db, now).state)).length;
   document.getElementById('today-tiles').replaceChildren(
-    tile('Checked in today', `${t.checkedIn} of ${t.total}`),
-    tile('7-day participation', `${t.participation7d}%`, participationClass(t.participation7d)),
+    tile('Warmed up today', `${t.checkedIn} of ${t.total}`),
+    tile('Need attention', String(needs), needs > 0 ? 'text-bad' : 'text-ok', needs > 0 ? ['Overdue or needs a retake'] : ['Everyone is up to date']),
+    tile('Average lift score', sum.average === null ? '—' : String(sum.average), sum.average === null ? '' : bandClass(sum.average)),
     tile('Soreness flags', String(flags.length), flags.length > 0 ? 'text-warn' : '', flags),
-    tile('Longest streak', best.shifts ? `${best.shifts} ${best.shifts === 1 ? 'shift' : 'shifts'}` : '—', '', best.shifts ? [best.name] : []),
   );
 }
 
-function renderTiles(db, now) {
-  const s = summary(db, now);
-  document.getElementById('tiles').replaceChildren(
-    tile('Team members', String(s.workers)),
-    tile('Average latest score', s.average === null ? '—' : String(s.average), s.average === null ? '' : bandClass(s.average)),
-    tile('Overdue rechecks', String(s.overdue), s.overdue > 0 ? 'text-bad' : ''),
-    tile('Most common issue', FAULTS[s.fault]?.label ?? 'None yet', 'is-text'),
-  );
-}
 
 function sparkline(scores, className) {
   const w = 72;
@@ -295,10 +288,10 @@ function render() {
   const hasSample = all.some((w) => w.sample === true);
   const isEmpty = rows.length === 0;
 
-  document.getElementById('interval').textContent = `Recheck every ${db.intervalDays} days`;
-  document.getElementById('pack').value = db.pack in PACKS ? db.pack : DEFAULT_PACK;
+  const pack = PACKS[db.pack] ?? PACKS[DEFAULT_PACK];
+  document.getElementById('bizTitle').textContent = db.business?.name ?? '';
+  document.getElementById('interval').textContent = `${pack.name} · lift certification every ${db.intervalDays} days`;
   renderToday(db, now);
-  renderTiles(db, now);
   const names = new Set(searchWorkers(rows.map((r) => r.worker), view.query)
     .filter((w) => matchesFilter(w, view.filter, db, now)).map((w) => w.name));
   const shown = rows.filter((r) => names.has(r.worker.name));
@@ -357,25 +350,8 @@ const ACTIONS = {
   'mark-read': () => { save(markAlertsRead(load(), Date.now())); return true; },
 };
 
-function initPack() {
-  const select = document.getElementById('pack');
-  for (const [id, pack] of Object.entries(PACKS)) {
-    const option = el('option', '', `${pack.name} · ${pack.blurb}`);
-    option.value = id;
-    select.append(option);
-  }
-  select.addEventListener('change', () => {
-    try {
-      save({ ...load(), pack: select.value });
-    } catch (err) {
-      console.warn('LiftSafe: could not save the business type', err);
-    }
-    render();
-  });
-}
 
 function init() {
-  initPack();
   document.getElementById('search').addEventListener('input', (e) => { view.query = e.target.value; render(); });
   document.addEventListener('click', (e) => {
     const action = e.target.closest('[data-action]')?.dataset.action;
