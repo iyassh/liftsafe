@@ -1,0 +1,60 @@
+/* Supervisor dashboard. Tokens and shared components come from base.css. */
+.dash-head {
+  display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; flex-wrap: wrap;
+  margin: 16px 0 24px;
+}
+.dash-head h1 { margin: 0; font-size: 2rem; letter-spacing: -0.02em; }
+.dash-head p { margin: 4px 0 0; }
+
+.tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 16px; margin-bottom: 24px; }
+.tile-label { margin: 0 0 6px; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.06em; }
+.tile-value { margin: 0; font-size: 2.4rem; font-weight: 800; line-height: 1.1; font-variant-numeric: tabular-nums; }
+.tile-value.is-text { font-size: 1.2rem; line-height: 1.3; padding-top: 6px; }
+
+.empty { text-align: center; padding: 48px 20px; }
+.empty h2 { margin: 0 0 8px; font-size: 1.6rem; }
+.empty p { max-width: 520px; margin: 0 auto 24px; }
+.empty-actions { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+
+.table-card { padding: 0; overflow: hidden; }
+.sample-note { margin: 0; padding: 12px 20px; font-size: 0.9rem; border-bottom: 1px solid var(--line); }
+/* Wide tables scroll inside the card so the page itself never scrolls sideways. */
+/* Positioned so the .sr-only spans in the table scroll with it instead of widening the page. */
+.table-scroll { overflow-x: auto; position: relative; }
+table { width: 100%; min-width: 860px; border-collapse: collapse; }
+th, td { padding: 14px 14px; text-align: left; white-space: nowrap; }
+th:first-child, td:first-child { padding-left: 20px; }
+th:last-child, td:last-child { padding-right: 20px; }
+th {
+  color: var(--muted); font-size: 0.8rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em;
+  border-bottom: 1px solid var(--line);
+}
+tbody tr + tr td { border-top: 1px solid var(--line); }
+tbody tr:hover { background: var(--surface-2); }
+
+.name { font-weight: 700; }
+.tag {
+  display: inline-block; margin-left: 8px; padding: 1px 8px; vertical-align: middle;
+  border: 1px dashed var(--line); border-radius: 999px;
+  color: var(--muted); font-size: 0.7rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em;
+}
+.sample-note .tag { margin: 0 2px; }
+.score { font-size: 1.3rem; font-weight: 800; font-variant-numeric: tabular-nums; }
+
+.trend { display: flex; align-items: center; gap: 12px; font-variant-numeric: tabular-nums; }
+.spark { flex: none; overflow: visible; }
+.spark polyline { fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.spark circle { fill: currentColor; }
+
+.recheck { color: var(--accent); font-weight: 700; text-decoration: none; }
+.recheck:hover { text-decoration: underline; }
+
+.tools { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 24px; }
+.btn-small { padding: 10px 16px; font-size: 0.95rem; font-weight: 600; }
+.btn-danger { border-color: var(--bad); color: var(--bad); }
+.fineprint { font-size: 0.85rem; margin-top: 16px; }
+
+.sr-only {
+  position: absolute; width: 1px; height: 1px; overflow: hidden;
+  clip-path: inset(50%); white-space: nowrap;
+}

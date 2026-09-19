@@ -25,5 +25,7 @@ export function angleFromVertical(from, to) {
 
 // 0 below lo, 1 above hi, linear between.
 export function ramp(v, lo, hi) {
-  return clamp((v - lo) / (hi - lo), 0, 1);
+  const r = (v - lo) / (hi - lo);
+  if (Number.isNaN(r)) return 0;
+  return clamp(r, 0, 1);
 }

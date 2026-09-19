@@ -29,3 +29,8 @@ test('ramp clamps to 0..1', () => {
   assert.equal(ramp(15, 10, 20), 0.5);
   assert.equal(ramp(99, 10, 20), 1);
 });
+
+test('ramp never returns NaN', () => {
+  assert.equal(ramp(NaN, 0, 1), 0);
+  assert.equal(ramp(5, 5, 5), 0);
+});

@@ -48,3 +48,18 @@ test('liveFaults flags the frame that is going wrong', () => {
 test('every fault has a label and a tip', () => {
   for (const f of Object.values(FAULTS)) assert.ok(f.label && f.tip);
 });
+
+test('an empty session summarises to a failed zero, not NaN', () => {
+  assert.deepEqual(summariseSession([]), { score: 0, passed: false, topFault: null });
+});
+
+test('a lift with a non-finite score does not turn the session score into NaN', () => {
+  const s = summariseSession([{ score: 80, faults: [] }, { score: NaN, faults: [] }]);
+  assert.equal(s.score, 80);
+});
+
+test('a lift with a missing or non-finite measurement still gets a numeric score', () => {
+  const r = scoreLift({ ...good, maxReach: NaN });
+  assert.equal(r.score, 100);
+  assert.ok(Number.isFinite(scoreLift({ ...good, maxTrunk: undefined }).score));
+});

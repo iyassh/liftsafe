@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Lift check · LiftSafe</title>
+  <meta name="description" content="Five practice lifts in front of the camera, live coaching, and a Lift Safety Score.">
+  <link rel="stylesheet" href="css/base.css">
+  <link rel="stylesheet" href="css/check.css">
+</head>
+<body>
+  <div class="wrap">
+    <header class="topbar">
+      <a class="brand" href="index.html">Lift<span>Safe</span></a>
+      <nav class="nav" aria-label="Main">
+        <a href="check.html" aria-current="page">Lift check</a>
+        <a href="dashboard.html">Dashboard</a>
+      </nav>
+      <span class="badge">🔒 Video never leaves this device</span>
+    </header>
+
+    <main class="check" id="check">
+      <!-- Shared by the positioning and lifting screens. Only the video and canvas are
+           mirrored; the message sits above them so its text reads the right way round. -->
+      <div class="stage" id="stage" hidden>
+        <video id="cam" autoplay playsinline muted></video>
+        <canvas id="overlay"></canvas>
+        <p class="stage-msg" id="stageMsg" role="status" aria-live="polite" hidden></p>
+      </div>
+
+      <section class="screen screen-name card" id="screen-name">
+        <h1>Lift check</h1>
+        <p class="muted">Five practice lifts, side-on to the camera. Takes about a minute.</p>
+        <form id="nameForm" autocomplete="off">
+          <label for="workerName">Worker name</label>
+          <input type="text" id="workerName" maxlength="60" placeholder="e.g. Sam Carter" required>
+          <button type="submit" class="btn btn-big" id="startBtn" disabled>Start</button>
+        </form>
+        <div class="start-error" id="startError" role="alert" hidden>
+          <p id="startErrorMsg"></p>
+          <button type="button" class="btn btn-ghost" id="retryBtn">Retry</button>
+        </div>
+      </section>
+
+      <section class="screen panel card" id="screen-positioning" hidden>
+        <p class="panel-eyebrow">Step 1 of 2</p>
+        <h2>Get into position</h2>
+        <ul class="setup-list">
+          <li>Stand <strong>sideways</strong> to the camera</li>
+          <li>Step back until we can see you <strong>head to feet</strong></li>
+          <li>Put the box on the floor in front of you</li>
+        </ul>
+        <p class="muted">Scoring starts on its own once you are in place.</p>
+      </section>
+
+      <section class="screen panel card" id="screen-lifting" hidden>
+        <p class="lift-count" id="liftCount">Lift 1 of 5</p>
+        <div class="dots" id="dots" aria-hidden="true"></div>
+        <p class="panel-eyebrow">Last lift</p>
+        <p class="last-score" id="lastScore">–</p>
+        <p class="tip" id="tip" role="status" aria-live="polite"></p>
+        <p class="muted">Pick the box up, stand tall, put it back down.</p>
+      </section>
+
+      <section class="screen screen-results card" id="screen-results" hidden>
+        <p class="panel-eyebrow" id="resultName"></p>
+        <h1>Lift Safety Score</h1>
+        <p class="session-score" id="sessionScore"></p>
+        <p class="verdict"><span class="pill" id="verdict"></span></p>
+        <ol class="lift-scores" id="liftScores" aria-label="Score for each lift"></ol>
+        <div class="top-fault" id="topFault">
+          <p class="top-fault-label" id="topFaultLabel"></p>
+          <p class="top-fault-tip" id="topFaultTip"></p>
+        </div>
+        <div class="result-actions">
+          <button type="button" class="btn btn-big" id="saveBtn">Save record</button>
+          <button type="button" class="btn btn-ghost btn-big" id="againBtn">Try again</button>
+        </div>
+        <p class="saved" id="saved" role="status" hidden>
+          <span id="savedMsg"></span>
+          <a id="dashLink" href="dashboard.html">Open the dashboard →</a>
+        </p>
+      </section>
+    </main>
+  </div>
+
+  <pre class="debug" id="debug" hidden></pre>
+
+  <script type="module" src="js/check.js"></script>
+</body>
+</html>

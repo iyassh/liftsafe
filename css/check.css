@@ -1,0 +1,210 @@
+/* Lift check screen. Tokens and shared components come from base.css. */
+
+.check {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 20px;
+  align-items: start;
+}
+
+/* Camera screens: stage beside the panel. Name and results are a single centred card. */
+.check[data-screen='positioning'],
+.check[data-screen='lifting'] {
+  grid-template-columns: minmax(0, 2.2fr) minmax(280px, 1fr);
+}
+
+/* ---------- stage ---------- */
+
+.stage {
+  position: relative;
+  aspect-ratio: 16 / 9;
+  overflow: hidden;
+  background: #000;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+}
+
+/* Mirrored together so the skeleton stays on the body. Text is a sibling, so it is not flipped. */
+.stage video,
+.stage canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  transform: scaleX(-1);
+}
+
+.stage-msg {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: max-content;
+  max-width: 88%;
+  margin: 0;
+  padding: 0.35em 0.7em;
+  border-radius: var(--radius);
+  background: rgba(11, 15, 20, 0.78);
+  font-size: clamp(1.2rem, 4.2vw, 3.4rem);
+  font-weight: 800;
+  line-height: 1.15;
+  letter-spacing: -0.01em;
+  text-align: center;
+  text-wrap: balance;
+}
+
+/* ---------- name ---------- */
+
+.screen-name,
+.screen-results {
+  width: 100%;
+  max-width: 720px;
+  margin: 24px auto 0;
+  padding: 32px;
+}
+
+.screen-name h1,
+.screen-results h1 { margin: 0 0 8px; font-size: 2.2rem; letter-spacing: -0.02em; }
+
+.screen-name form { display: grid; gap: 12px; margin-top: 24px; }
+.screen-name label { font-weight: 700; }
+.screen-name .btn { margin-top: 8px; }
+
+.start-error {
+  margin-top: 20px;
+  padding: 16px 20px;
+  border: 1px solid var(--bad);
+  border-radius: var(--radius);
+  background: color-mix(in srgb, var(--bad) 12%, transparent);
+}
+.start-error p { margin: 0 0 12px; font-weight: 600; }
+
+/* ---------- side panel ---------- */
+
+.panel { display: grid; gap: 10px; align-content: start; }
+.panel h2 { margin: 0; font-size: 1.8rem; letter-spacing: -0.02em; }
+.panel p { margin: 0; }
+
+.panel-eyebrow {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.85rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.setup-list { margin: 8px 0; padding-left: 1.2em; display: grid; gap: 10px; font-size: 1.25rem; }
+.setup-list strong { color: var(--accent); }
+
+.lift-count {
+  font-size: clamp(2.4rem, 4.4vw, 3.6rem);
+  font-weight: 800;
+  line-height: 1.05;
+  letter-spacing: -0.02em;
+}
+
+.dots { display: flex; gap: 12px; margin: 6px 0 14px; }
+.dot {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 3px solid var(--line);
+}
+.dot-current { border-color: var(--text); }
+.dot-ok { background: var(--ok); border-color: var(--ok); }
+.dot-warn { background: var(--warn); border-color: var(--warn); }
+.dot-bad { background: var(--bad); border-color: var(--bad); }
+
+.last-score {
+  font-size: clamp(5rem, 10vw, 8rem);
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: -0.04em;
+  font-variant-numeric: tabular-nums;
+}
+
+.tip { min-height: 3.2em; font-size: 1.5rem; font-weight: 700; line-height: 1.25; }
+
+/* ---------- results ---------- */
+
+.screen-results { text-align: center; }
+.screen-results .panel-eyebrow { overflow-wrap: anywhere; } /* a long name must not widen the card */
+
+.session-score {
+  margin: 0;
+  font-size: clamp(7rem, 22vw, 12rem);
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: -0.05em;
+  font-variant-numeric: tabular-nums;
+}
+
+.verdict { margin: 12px 0 28px; }
+.verdict .pill { padding: 8px 22px; font-size: 1.4rem; letter-spacing: 0.04em; }
+
+.lift-scores {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 10px;
+  margin: 0 0 24px;
+  padding: 0;
+  list-style: none;
+}
+.lift-scores li {
+  display: grid;
+  gap: 2px;
+  padding: 12px 4px;
+  border-radius: var(--radius);
+  background: var(--surface-2);
+}
+.lift-scores span { font-size: 0.8rem; }
+.lift-scores strong { font-size: 1.9rem; font-variant-numeric: tabular-nums; }
+
+.top-fault {
+  margin-bottom: 28px;
+  padding: 18px 20px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  text-align: left;
+}
+.top-fault p { margin: 0; }
+.top-fault-label { font-size: 1.35rem; font-weight: 800; }
+.top-fault .top-fault-tip { margin-top: 6px; font-size: 1.2rem; }
+
+.result-actions { display: flex; flex-wrap: wrap; justify-content: center; gap: 14px; }
+
+.saved { margin: 20px 0 0; font-size: 1.2rem; font-weight: 700; }
+.saved a { color: var(--text); }
+
+/* ---------- debug readout (?debug=1) ---------- */
+
+.debug {
+  position: fixed;
+  left: 12px;
+  bottom: 12px;
+  z-index: 10;
+  margin: 0;
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: rgba(11, 15, 20, 0.88);
+  color: var(--text);
+  font: 13px/1.4 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  pointer-events: none;
+}
+
+@media (max-width: 900px) {
+  .check[data-screen='positioning'],
+  .check[data-screen='lifting'] { grid-template-columns: minmax(0, 1fr); }
+  .screen-name, .screen-results { padding: 22px; }
+  .lift-scores { gap: 6px; }
+  .lift-scores strong { font-size: 1.5rem; }
+}
+
+@media (max-width: 480px) {
+  .lift-scores { gap: 4px; }
+  .lift-scores strong { font-size: 1.25rem; }
+  .lift-scores span { font-size: 0.7rem; }
+}

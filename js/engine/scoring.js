@@ -44,7 +44,8 @@ export function liveFaults(m, t = THRESHOLDS) {
 }
 
 export function summariseSession(lifts, t = THRESHOLDS) {
-  const score = Math.round(lifts.reduce((s, l) => s + l.score, 0) / lifts.length);
+  const scores = lifts.map((l) => l.score).filter(Number.isFinite);
+  const score = scores.length ? Math.round(scores.reduce((a, b) => a + b, 0) / scores.length) : 0;
   const counts = {};
   for (const l of lifts) for (const f of l.faults) counts[f] = (counts[f] ?? 0) + 1;
   const topFault = Object.keys(counts).sort((a, b) => counts[b] - counts[a])[0] ?? null;

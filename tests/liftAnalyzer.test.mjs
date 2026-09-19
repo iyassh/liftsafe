@@ -77,3 +77,52 @@ test('reset returns to standing and drops the lift in progress', () => {
   assert.equal(a.phase, 'standing');
   assert.equal(run(a, hold([5, 175], 3), 1000).length, 0);
 });
+
+test('a frame with non-finite metrics is skipped instead of poisoning the smoothing', () => {
+  const a = new LiftAnalyzer();
+  a.update(frame(5, 175), 0);
+  a.update(frame(NaN, 175), 100);
+  a.update({ visible: true }, 200);
+  a.update(null, 300);
+  assert.ok(Number.isFinite(a.current.trunkAngle));
+  const lifts = run(a, [...hold([5, 175], 3), ...hold([30, 100], 12), ...hold([5, 175], 8)], 400);
+  assert.equal(lifts.length, 1);
+  assert.ok(Number.isFinite(lifts[0].maxReach));
+});
+
+test('a worker who walks out mid-lift does not produce a lift when they come back', () => {
+  const a = new LiftAnalyzer(opts);
+  run(a, [...hold([5, 175], 3), ...hold([60, 170], 5)]);
+  a.update({ visible: false }, 5000);
+  assert.equal(a.phase, 'standing');
+  assert.equal(run(a, hold([5, 175], 3), 30000).length, 0);
+});
+
+test('a timestamp jump mid-lift drops the lift instead of stretching it', () => {
+  const a = new LiftAnalyzer(opts);
+  run(a, [...hold([5, 175], 3), ...hold([60, 170], 5)]);
+  assert.equal(run(a, hold([5, 175], 3), 60000).length, 0);
+  assert.equal(a.phase, 'standing');
+});
+
+test('smoothing restarts after a long gap rather than blending with stale values', () => {
+  const a = new LiftAnalyzer();
+  a.update(frame(80, 170), 0);
+  a.update(frame(5, 175), 10000);
+  assert.equal(a.current.trunkAngle, 5);
+});
+
+test('a lift already under way on the first frame is not scored', () => {
+  const a = new LiftAnalyzer(opts);
+  const lifts = run(a, [...hold([60, 170], 10), ...hold([5, 175], 3)]);
+  assert.equal(lifts.length, 0);
+  // The next complete lift still counts.
+  assert.equal(run(a, [...hold([30, 100], 10), ...hold([5, 175], 3)], 2000).length, 1);
+});
+
+test('coming back into view already bent does not start a lift half way through', () => {
+  const a = new LiftAnalyzer(opts);
+  run(a, hold([5, 175], 3));
+  const lifts = run(a, [...hold([60, 170], 10), ...hold([5, 175], 3)], 10000);
+  assert.equal(lifts.length, 0);
+});
