@@ -195,3 +195,73 @@ test('the business pack defaults to warehouse and survives a round trip', () => 
   for (const k of mem.keys()) mem.set(k, JSON.stringify({ workers: [], pack: 42 }));
   assert.equal(load(storage).pack, 'warehouse');
 });
+
+// ---------- roster (kiosk sign-in) ----------
+import { setBusiness, addWorker, removeWorker, setWorkerPin, findWorker, exportCsv } from '../js/store.js';
+
+const pin = { salt: 's', hash: 'h' };
+
+test('setBusiness stores the name and manager PIN record; a fresh db has no business', () => {
+  assert.equal(emptyDb().business, null);
+  const db = setBusiness(emptyDb(), { name: '  Hillside Movers ', managerPin: pin });
+  assert.deepEqual(db.business, { name: 'Hillside Movers', managerPin: pin });
+});
+
+test('addWorker puts a worker on the roster with no records, and refuses a duplicate name', () => {
+  let db = addWorker(emptyDb(), { id: 'w_1', name: 'Sam  Lee', pin });
+  assert.deepEqual(db.workers[0], { id: 'w_1', name: 'Sam Lee', pin, sessions: [], checkins: [] });
+  assert.throws(() => addWorker(db, { id: 'w_2', name: ' sam lee', pin }), /already/i);
+  assert.throws(() => addWorker(db, { id: 'w_3', name: '   ', pin }), /name/i);
+  db = addWorker(db, { id: 'w_2', name: 'Ana', pin });
+  assert.equal(db.workers.length, 2);
+});
+
+test('a roster member with no records yet survives a reload; a nameless stray still does not', () => {
+  const mem = new Map();
+  const storage = { getItem: (k) => mem.get(k) ?? null, setItem: (k, v) => mem.set(k, v) };
+  save(addWorker(emptyDb(), { id: 'w_1', name: 'Sam', pin }), storage);
+  const db = load(storage);
+  assert.equal(db.workers.length, 1);
+  assert.equal(workerStatus(db.workers[0], t0), 'uncertified');
+  assert.equal(streak(db.workers[0], t0), 0);
+});
+
+test('records land on the roster member with the same name, keeping id and PIN', () => {
+  let db = addWorker(emptyDb(), { id: 'w_1', name: 'Sam Lee', pin });
+  db = addCheckin(db, 'sam lee', checkin(), noon(0));
+  db = addSession(db, 'Sam Lee', session(80), noon(0));
+  assert.equal(db.workers.length, 1);
+  assert.equal(db.workers[0].id, 'w_1');
+  assert.equal(db.workers[0].checkins.length, 1);
+  assert.equal(db.workers[0].sessions.length, 1);
+});
+
+test('findWorker, setWorkerPin and removeWorker work by id and leave others alone', () => {
+  let db = addWorker(addWorker(emptyDb(), { id: 'w_1', name: 'Sam', pin }), { id: 'w_2', name: 'Ana', pin });
+  assert.equal(findWorker(db, 'w_2').name, 'Ana');
+  assert.equal(findWorker(db, 'nope'), null);
+  db = setWorkerPin(db, 'w_1', { salt: 'n', hash: 'n' });
+  assert.deepEqual(findWorker(db, 'w_1').pin, { salt: 'n', hash: 'n' });
+  assert.deepEqual(findWorker(db, 'w_2').pin, pin);
+  db = removeWorker(db, 'w_1');
+  assert.deepEqual(db.workers.map((w) => w.name), ['Ana']);
+});
+
+test('exportCsv: one row per record, quoted safely, and never includes PINs', () => {
+  let db = addWorker(emptyDb(), { id: 'w_1', name: 'Lee, "Sam"', pin: { salt: 'SALT', hash: 'HASH' } });
+  db = addSession(db, 'Lee, "Sam"', session(62, 'stoop'), noon(0));
+  db = addCheckin(db, 'Lee, "Sam"', checkin('knees'), noon(1));
+  const csv = exportCsv(db);
+  const lines = csv.trim().split('\n');
+  assert.equal(lines[0], 'worker,type,date,score,passed,top_fault,soreness,completed');
+  assert.equal(lines.length, 3);
+  assert.ok(lines[1].startsWith('"Lee, ""Sam""",lift check,'));
+  assert.ok(lines[1].includes(',62,no,stoop,'));
+  assert.ok(lines[2].includes('warm-up') && lines[2].includes('knees'));
+  assert.ok(!csv.includes('SALT') && !csv.includes('HASH'));
+});
+
+test('exportCsv defuses spreadsheet formulas in worker names', () => {
+  const db = addSession(emptyDb(), '=HYPERLINK("http://x")', session(80), noon(0));
+  assert.ok(!exportCsv(db).split('\n')[1].startsWith('=') && !exportCsv(db).split('\n')[1].startsWith('"='));
+});

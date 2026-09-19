@@ -3,7 +3,7 @@
 const KEY = 'liftsafe.db.v1';
 const DAY = 86400000;
 
-export const emptyDb = () => ({ intervalDays: 90, pack: 'warehouse', workers: [] });
+export const emptyDb = () => ({ intervalDays: 90, pack: 'warehouse', business: null, workers: [] });
 
 const MAX_NAME = 80;
 const NO_NAME = 'Unnamed worker';
@@ -58,17 +58,18 @@ export function mostCommonFault(db) {
 
 const validSession = (s) => s !== null && typeof s === 'object' && Number.isFinite(s.date);
 const validList = (list) => Array.isArray(list) && list.every(validSession);
-// A worker needs at least one dated record: a lift check or a warm-up.
+// A worker is either on the roster (has an id) or has at least one dated record.
 const validWorker = (w) => w !== null && typeof w === 'object' && typeof w.name === 'string'
   && validList(w.sessions) && (w.checkins === undefined || validList(w.checkins))
-  && w.sessions.length + checkinsOf(w).length > 0;
+  && (typeof w.id === 'string' || w.sessions.length + checkinsOf(w).length > 0);
 
 // Anything can be sitting under our key: an older shape, a hand edit, another app.
 function sanitise(raw) {
   if (raw === null || typeof raw !== 'object' || !Array.isArray(raw.workers)) return emptyDb();
   const intervalDays = Number.isFinite(raw.intervalDays) && raw.intervalDays > 0 ? raw.intervalDays : 90;
   const pack = typeof raw.pack === 'string' ? raw.pack : 'warehouse';
-  return { ...raw, intervalDays, pack, workers: raw.workers.filter(validWorker) };
+  const business = typeof raw.business?.name === 'string' ? raw.business : null;
+  return { ...raw, intervalDays, pack, business, workers: raw.workers.filter(validWorker) };
 }
 
 // `storage` is resolved inside the try: touching localStorage itself throws when site data is blocked.
@@ -110,5 +111,45 @@ export function todaySummary(db, now) {
     soreness: todays.filter(({ c }) => c.soreness).map(({ w, c }) => ({ name: w.name, area: c.soreness })),
     participation7d: db.workers.length ? Math.round((100 * active) / db.workers.length) : 0,
   };
+}
+
+// ---------- roster (kiosk sign-in) ----------
+
+export function setBusiness(db, { name, managerPin }) {
+  return { ...db, business: { name: clean(name), managerPin } };
+}
+
+export const findWorker = (db, id) => db.workers.find((w) => w.id === id) ?? null;
+
+// `pin` is a { salt, hash } record from auth.makePin, never the PIN itself.
+export function addWorker(db, { id, name, pin }) {
+  if (!String(name ?? '').trim()) throw new Error('Enter a name.');
+  if (db.workers.some((w) => norm(w.name) === norm(name))) throw new Error(`${clean(name)} is already on the team.`);
+  return { ...db, workers: [...db.workers, { id, name: clean(name), pin, sessions: [], checkins: [] }] };
+}
+
+export const removeWorker = (db, id) => ({ ...db, workers: db.workers.filter((w) => w.id !== id) });
+
+export const setWorkerPin = (db, id, pin) => ({
+  ...db,
+  workers: db.workers.map((w) => (w.id === id ? { ...w, pin } : w)),
+});
+
+// A leading =, +, - or @ makes a spreadsheet run the cell as a formula.
+const csvCell = (v) => {
+  const text = String(v ?? '');
+  const safe = /^[=+\-@]/.test(text) ? `'${text}` : text;
+  return /[",\n]/.test(safe) ? `"${safe.replaceAll('"', '""')}"` : safe;
+};
+
+// Every lift check and warm-up as one row. PINs are never exported.
+export function exportCsv(db) {
+  const iso = (ms) => new Date(ms).toISOString();
+  const rows = db.workers.flatMap((w) => [
+    ...w.sessions.map((s) => [w.name, 'lift check', iso(s.date), s.score, s.passed ? 'yes' : 'no', s.topFault ?? '', '', '']),
+    ...checkinsOf(w).map((c) => [w.name, 'warm-up', iso(c.date), '', '', '', c.soreness ?? '', c.completed ? 'yes' : 'no']),
+  ]);
+  const header = ['worker', 'type', 'date', 'score', 'passed', 'top_fault', 'soreness', 'completed'];
+  return [header, ...rows].map((r) => r.map(csvCell).join(',')).join('\n') + '\n';
 }
 
