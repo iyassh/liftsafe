@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Pre-shift warm-up · LiftSafe</title>
+  <meta name="description" content="A three-minute, camera-verified warm-up at the start of the shift, with live coaching.">
+  <link rel="stylesheet" href="css/base.css">
+  <link rel="stylesheet" href="css/check.css">
+  <link rel="stylesheet" href="css/warmup.css">
+</head>
+<body>
+  <div class="wrap">
+    <header class="topbar">
+      <a class="brand" href="index.html">Lift<span>Safe</span></a>
+      <nav class="nav" aria-label="Main">
+        <a href="check.html">Lift check</a>
+        <a href="warmup.html" aria-current="page">Warm-up</a>
+        <a href="dashboard.html">Dashboard</a>
+      </nav>
+      <span class="badge">🔒 Video never leaves this device</span>
+    </header>
+
+    <main class="check" id="warmup">
+      <!-- Shared by the positioning and movement screens. Only the video and canvas are
+           mirrored; the message sits above them so its text reads the right way round. -->
+      <div class="stage" id="stage" hidden>
+        <video id="cam" autoplay playsinline muted></video>
+        <canvas id="overlay"></canvas>
+        <p class="stage-msg" id="stageMsg" role="status" aria-live="polite" hidden></p>
+      </div>
+
+      <section class="screen screen-name card" id="screen-name">
+        <h1>Pre-shift warm-up</h1>
+        <p class="muted pack-line" id="packLine"></p>
+        <form id="nameForm" autocomplete="off">
+          <label for="workerName">Worker name</label>
+          <input type="text" id="workerName" maxlength="60" placeholder="e.g. Sam Carter" required>
+          <button type="submit" class="btn btn-big" id="startBtn" disabled>Start</button>
+        </form>
+        <div class="start-error" id="startError" role="alert" hidden>
+          <p id="startErrorMsg"></p>
+          <button type="button" class="btn btn-ghost" id="retryBtn">Retry</button>
+        </div>
+      </section>
+
+      <section class="screen screen-soreness card" id="screen-soreness" hidden>
+        <h1>Any soreness today?</h1>
+        <div class="soreness-options" id="sorenessOptions">
+          <button type="button" class="btn btn-big" data-area="">None</button>
+          <button type="button" class="btn btn-ghost btn-big" data-area="lower-back">Lower back</button>
+          <button type="button" class="btn btn-ghost btn-big" data-area="shoulders">Shoulders</button>
+          <button type="button" class="btn btn-ghost btn-big" data-area="knees">Knees</button>
+          <button type="button" class="btn btn-ghost btn-big" data-area="other">Other</button>
+        </div>
+        <p class="muted" id="sorenessNote">Your supervisor sees this so they can help.</p>
+      </section>
+
+      <section class="screen panel card" id="screen-positioning" hidden>
+        <p class="panel-eyebrow">Get ready</p>
+        <h2>Get into position</h2>
+        <ul class="setup-list">
+          <li>Stand <strong>sideways</strong> to the camera</li>
+          <li>Step back until we can see you <strong>head to feet</strong></li>
+          <li>Leave room to raise your arms</li>
+        </ul>
+        <p class="muted">The warm-up starts on its own once you are in place.</p>
+      </section>
+
+      <section class="screen panel card" id="screen-movement" hidden>
+        <p class="panel-eyebrow" id="moveStep">Movement 1 of 3</p>
+        <h2 id="moveName"></h2>
+        <p class="move-instruction" id="moveInstruction"></p>
+        <div class="move-progress" id="repsProgress">
+          <p class="move-count" id="repCount">0 / 5</p>
+          <div class="dots" id="dots" aria-hidden="true"></div>
+        </div>
+        <div class="move-progress" id="holdProgress" hidden>
+          <p class="move-count"><span id="holdSeconds">5</span><span class="move-unit"> s</span></p>
+          <div class="hold-bar" aria-hidden="true"><div class="hold-fill" id="holdFill"></div></div>
+        </div>
+        <div class="move-actions">
+          <button type="button" class="btn btn-ghost btn-small" id="skipBtn">Skip</button>
+          <button type="button" class="btn btn-ghost btn-small" id="voiceBtn" aria-pressed="true">🔊 Voice on</button>
+        </div>
+      </section>
+
+      <section class="screen screen-done card" id="screen-done" hidden>
+        <p class="panel-eyebrow" id="doneName"></p>
+        <h1 class="done-title text-ok">Shift-ready ✓</h1>
+        <p class="done-time" id="doneTime"></p>
+        <p class="done-streak" id="doneStreak"></p>
+        <ul class="done-moves" id="doneMoves" aria-label="Movements"></ul>
+        <div class="start-error" id="saveError" role="alert" hidden>
+          <p>Could not save this check-in on this device. Check that browser storage is allowed.</p>
+          <button type="button" class="btn btn-ghost" id="retrySaveBtn">Retry save</button>
+        </div>
+        <div class="result-actions">
+          <a class="btn btn-big" id="liftLink" href="check.html">Go to lift check</a>
+          <a class="btn btn-ghost btn-big" href="dashboard.html">Dashboard</a>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <pre class="debug" id="debug" hidden></pre>
+
+  <script type="module" src="js/warmup.js"></script>
+</body>
+</html>
