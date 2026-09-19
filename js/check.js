@@ -3,6 +3,7 @@ import { computeMetrics } from './engine/poseMetrics.js';
 import { checkPosition } from './engine/positioning.js';
 import { LiftAnalyzer } from './engine/liftAnalyzer.js';
 import { FAULTS, scoreLift, liveFaults, summariseSession } from './engine/scoring.js';
+import { devLog } from './devLog.js';
 import { load, save, addSession } from './store.js';
 
 const LIFTS_PER_SESSION = 5;
@@ -66,6 +67,7 @@ function go(screen) {
   const leavingCamera = screen === 'results' || screen === 'name';
   if (leavingCamera) stopSource();
   state.screen = screen;
+  devLog.event('screen', { screen });
   for (const s of SCREENS) $(`screen-${s}`).hidden = s !== screen;
   el.stage.hidden = screen === 'name' || screen === 'results';
   $('check').dataset.screen = screen;
@@ -310,6 +312,7 @@ function onFrame(lms, now) {
   ctx.clearRect(0, 0, el.canvas.width, el.canvas.height);
   if (lms) drawSkeleton(lms, COLOR[tone]);
   if (debugOn) renderDebug(m, problem);
+  devLog.frame(now, state.screen, state.analyzer?.phase, m, problem, m?.visible ? liveFaults(m) : []);
 }
 
 function framePositioning(problem, now) {
@@ -334,6 +337,7 @@ function frameLifting(m, problem, now) {
     if (!state.paused && now - state.badSince > PAUSE_AFTER_MS) {
       state.paused = true;
       state.analyzer.reset();
+      devLog.event('paused', { pos: problem.id });
     }
     setStageMsg(state.paused ? problem.message : null, 'warn');
     return 'warn';
@@ -341,8 +345,15 @@ function frameLifting(m, problem, now) {
   state.badSince = null;
   state.paused = false;
 
+  const wasLifting = state.analyzer.phase === 'lifting';
   const lift = state.analyzer.update(m, now);
-  if (lift) recordLift(scoreLift(lift), now);
+  // A lift that ends without a summary was dropped (too short, or a gap in usable frames).
+  if (wasLifting && state.analyzer.phase === 'standing' && !lift) devLog.event('lift-dropped');
+  if (lift) {
+    const result = scoreLift(lift);
+    devLog.event('lift', { n: state.scored.length + 1, lift, result });
+    recordLift(result, now);
+  }
   if (state.screen !== 'lifting') return 'ok';
 
   const live = liveFaults(m);
@@ -406,6 +417,7 @@ function renderPanel() {
 function renderResults() {
   const summary = summariseSession(state.scored);
   state.summary = summary;
+  devLog.event('session', { summary });
   const tone = band(summary.score);
 
   el.resultName.textContent = state.name;
