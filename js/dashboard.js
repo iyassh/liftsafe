@@ -237,7 +237,7 @@ function row({ worker }, db, now) {
 // ---------- alerts ----------
 
 const ALERT_ICON = { completed: '✅', retake: '⚠️', overdue: '🔴', 'due-soon': '🟡', soreness: '🩹' };
-const MAX_ALERTS = 8;
+const FEW_ALERTS = 4; // enough to act on without pushing the team table off the screen
 
 function ago(at, now) {
   const mins = Math.round((now - at) / 60000);
@@ -255,7 +255,10 @@ function renderAlerts(db, now) {
   document.getElementById('alertCount').hidden = unread === 0;
   document.getElementById('alertCount').textContent = String(unread);
   document.getElementById('markRead').hidden = unread === 0;
-  document.getElementById('alertList').replaceChildren(...list.slice(0, MAX_ALERTS).map((a) => {
+  const more = document.getElementById('moreAlerts');
+  more.hidden = list.length <= FEW_ALERTS;
+  more.textContent = view.allAlerts ? 'Show fewer' : `Show all ${list.length}`;
+  document.getElementById('alertList').replaceChildren(...list.slice(0, view.allAlerts ? list.length : FEW_ALERTS).map((a) => {
     const li = el('li', a.at > seen ? 'unread' : '');
     const worker = db.workers.find((w) => w.name === a.worker);
     const link = el('a', '', a.text);
@@ -268,7 +271,7 @@ function renderAlerts(db, now) {
 
 // ---------- search and filters ----------
 
-const view = { query: '', filter: 'all' };
+const view = { query: '', filter: 'all', allAlerts: false };
 
 function renderFilters() {
   document.getElementById('filters').replaceChildren(...FILTERS.map(([id, label]) => {
@@ -347,6 +350,7 @@ const ACTIONS = {
   'load-sample': () => { save(mergeSample({ ...emptyDb(), ...load() }, Date.now())); return true; },
   'clear-sample': () => { save(withoutSample({ ...emptyDb(), ...load() })); return true; },
   'clear-all': clearAll,
+  'more-alerts': () => { view.allAlerts = !view.allAlerts; return true; },
   'mark-read': () => { save(markAlertsRead(load(), Date.now())); return true; },
 };
 
