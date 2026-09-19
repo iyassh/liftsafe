@@ -1,6 +1,6 @@
-# LiftCoach — Design & Pitch Plan
+# LiftSafe — Design & Pitch Plan
 
-Kamloops 2026 Hackathon (Sep 18–20, TRU OLARA building). Name is a placeholder.
+Kamloops 2026 Hackathon (Sep 18–20, TRU OLARA building). 
 
 **Judged on:** market research, prototype, presentation.
 **Deadlines:** mentor demo Saturday (required to present); 5–10 min presentation Sunday 10 AM (arrive 9:30).
@@ -8,7 +8,7 @@ Kamloops 2026 Hackathon (Sep 18–20, TRU OLARA building). Name is a placeholder
 
 ## One-liner
 
-LiftCoach is an AI lifting-safety trainer for small businesses: five lifts in front of any camera, instant coaching, and a training record for the employer, renewed every 3 months. No consultants, no wearables, no video stored.
+LiftSafe is an AI lifting-safety trainer for small businesses: five lifts in front of any camera, instant coaching, and a training record for the employer, renewed every 3 months. No consultants, no wearables, no video stored.
 
 "Like a CBL, except you can't click through it — you have to actually lift correctly."
 
@@ -57,7 +57,7 @@ Record a backup video Saturday in case the webcam or lighting fails.
 
 ## 7. Branding
 
-- "Coach" signals help, not surveillance. Check the name is free.
+- The name says the benefit outright. In the pitch, stress coaching over surveillance.
 - Hi-vis safety colours (green/amber/red on dark), bold, readable from 2 metres.
 - Taglines: "Lift right. Every time." / "Safety training that watches you lift."
 - Plain, blue-collar tone. No jargon.
