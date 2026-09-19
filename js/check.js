@@ -3,7 +3,7 @@ import { computeMetrics } from './engine/poseMetrics.js';
 import { checkPosition } from './engine/positioning.js';
 import { LiftAnalyzer } from './engine/liftAnalyzer.js';
 import { FAULTS, scoreLift, liveFaults, summariseSession } from './engine/scoring.js';
-import { devLog } from './devLog.js';
+import { devLog, devFlag } from './devLog.js';
 import { load, save, addSession } from './store.js';
 
 const LIFTS_PER_SESSION = 5;
@@ -21,7 +21,7 @@ const JOINTS = [...new Set(BONES.flat())];
 
 const params = new URLSearchParams(location.search);
 const testVideoUrl = params.get('video');
-const debugOn = params.get('debug') === '1';
+const debugOn = devFlag('debug');
 
 const $ = (id) => document.getElementById(id);
 const el = {

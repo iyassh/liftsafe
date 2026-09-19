@@ -1,7 +1,21 @@
-// Development telemetry for tuning thresholds. Off unless the page is opened with ?log=1.
+// Development telemetry for tuning thresholds. Off unless switched on with ?log=1.
 // Sends numbers only (angles, phase, scores) to the local dev server (tools/dev-server.mjs),
 // never images or video, and never to another origin.
-const on = new URLSearchParams(location.search).get('log') === '1';
+// Sticky: ?log=1 turns it on for this browser until ?log=0, so it survives reloads
+// and nav links that drop the query string.
+export function devFlag(name) {
+  const param = new URLSearchParams(location.search).get(name);
+  const key = `liftsafe.dev.${name}`;
+  try {
+    if (param === '1') localStorage.setItem(key, '1');
+    if (param === '0') localStorage.removeItem(key);
+    return localStorage.getItem(key) === '1';
+  } catch {
+    return param === '1';
+  }
+}
+
+const on = devFlag('log');
 const FRAME_EVERY_MS = 100;
 const FLUSH_EVERY_MS = 500;
 
@@ -16,9 +30,19 @@ function flush() {
   fetch('/__log', { method: 'POST', body, keepalive: true }).catch(() => {});
 }
 
+// Visible whenever telemetry is on, so nobody records a session without knowing it.
+function showIndicator() {
+  const tag = document.createElement('div');
+  tag.textContent = '● Dev log on (numbers only) · ?log=0 to stop';
+  tag.style.cssText = 'position:fixed;top:8px;left:50%;transform:translateX(-50%);z-index:99;'
+    + 'padding:4px 12px;border-radius:999px;background:#ff3b30;color:#fff;font:600 12px system-ui';
+  document.body.append(tag);
+}
+
 if (on) {
   setInterval(flush, FLUSH_EVERY_MS);
   addEventListener('pagehide', flush);
+  showIndicator();
 }
 
 export const devLog = {
