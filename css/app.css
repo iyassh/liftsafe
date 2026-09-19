@@ -98,3 +98,7 @@ h2 { font-size: 1.25rem; margin: 28px 0 10px; }
 .course-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; }
 .course-head h3 { margin: 0; font-size: 1.3rem; line-height: 1.2; }
 .pill-neutral { background: var(--surface-2); color: var(--muted); }
+
+/* ---------- search ---------- */
+.find-name { max-width: 420px; margin-bottom: 16px; }
+.roster + p, #findMember { margin-bottom: 6px; }

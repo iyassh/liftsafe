@@ -5,9 +5,10 @@ import { load, save, setBusiness, addWorker, checkinsOf, streak } from './store.
 import { validPin, makePin, checkPin, startSession, endSession } from './auth.js';
 import { PACKS, DEFAULT_PACK } from './packs.js';
 import { mergeSample, DEMO_BUSINESS, DEMO_PINS } from './sampleData.js';
-import { unreadCount } from './training.js';
+import { unreadCount, searchWorkers } from './training.js';
 
 const MAX_TRIES = 5;
+const SEARCH_FROM = 4; // two or three tiles need no search box
 const LOCK_MS = 30_000;
 
 const $ = (id) => document.getElementById(id);
@@ -131,7 +132,10 @@ function renderKiosk() {
   const now = Date.now();
   const roster = db.workers.filter((w) => typeof w.id === 'string').sort((a, b) => a.name.localeCompare(b.name));
   $('bizTitle').textContent = db.business.name;
-  $('workerTiles').replaceChildren(...roster.map((w) => workerTile(w, now)));
+  const shown = searchWorkers(roster, $('findName').value);
+  $('workerTiles').replaceChildren(...shown.map((w) => workerTile(w, now)));
+  $('findName').hidden = roster.length < SEARCH_FROM && !$('findName').value;
+  $('noMatch').hidden = shown.length > 0 || roster.length === 0;
   $('noWorkers').hidden = roster.length > 0;
   // A count only, never the alerts themselves: anyone can see the kiosk.
   const unread = unreadCount(db, now);
@@ -234,6 +238,7 @@ endSession(); // arriving at the kiosk always signs the last person out
 initSetup();
 initPinPad();
 $('managerBtn').addEventListener('click', () => openPin({ kind: 'manager' }));
+$('findName').addEventListener('input', renderKiosk);
 renderKiosk();
 tickClock();
 setInterval(tickClock, 15_000);

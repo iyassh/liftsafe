@@ -29,7 +29,9 @@
       <div class="panel-grid">
         <section class="card">
           <h2>Your team</h2>
+          <input type="text" id="findMember" placeholder="Search team members by name" autocomplete="off" aria-label="Search team members by name">
           <ul class="roster" id="roster"></ul>
+          <p class="muted" id="noMatch" hidden>No team member matches that name.</p>
           <p class="muted" id="noRoster" hidden>No one on the team yet.</p>
 
           <form class="panel-form" id="addForm" novalidate>

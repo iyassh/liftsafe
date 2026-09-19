@@ -2,6 +2,7 @@
 import { load, save, addWorker, removeWorker, setWorkerPin, exportCsv, checkinsOf } from './store.js';
 import { requireRole, keepAlive, endSession, validPin, makePin } from './auth.js';
 import { PACKS, DEFAULT_PACK } from './packs.js';
+import { searchWorkers } from './training.js';
 
 const CONFIRM_MS = 4000;
 const $ = (id) => document.getElementById(id);
@@ -58,7 +59,9 @@ function resetPinControl(worker) {
 
 function renderRoster(db) {
   const roster = db.workers.filter((w) => typeof w.id === 'string').sort((a, b) => a.name.localeCompare(b.name));
-  $('roster').replaceChildren(...roster.map((w) => {
+  const shown = searchWorkers(roster, $('findMember').value);
+  $('noMatch').hidden = shown.length > 0 || roster.length === 0;
+  $('roster').replaceChildren(...shown.map((w) => {
     const li = el('li');
     const records = w.sessions.length + checkinsOf(w).length;
     const who = el('span', 'who', w.name);
@@ -148,5 +151,6 @@ if (requireRole(['manager'])) {
   $('addForm').addEventListener('submit', addFromForm);
   $('settingsForm').addEventListener('submit', saveSettings);
   $('exportBtn').addEventListener('click', downloadCsv);
+  $('findMember').addEventListener('input', () => renderRoster(load()));
   render();
 }
