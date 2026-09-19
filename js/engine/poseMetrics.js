@@ -40,5 +40,7 @@ export function computeMetrics(lms, aspect) {
     trunkAngle: angleFromVertical(hip, shoulder),
     kneeAngle: angleAt(hip, knee, ankle),
     reach: wristSeen && torso > 0 ? Math.abs(wrist.x - ankle.x) / torso : 0,
+    // 0 = arm hanging at the side, 180 = straight overhead.
+    armRaise: wristSeen ? 180 - angleFromVertical(shoulder, wrist) : 0,
   };
 }

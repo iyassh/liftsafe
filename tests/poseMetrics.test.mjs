@@ -75,3 +75,18 @@ test('joints guessed outside the frame are not visible, whatever their confidenc
 test('not visible when key joints are hidden', () => {
   assert.equal(computeMetrics(pose({ leftShoulder: { x: 0.5, y: 0.3 } }), 1).visible, false);
 });
+
+const arm = (wrist) => pose({
+  leftShoulder: { x: 0.5, y: 0.3 }, leftHip: { x: 0.5, y: 0.55 },
+  leftKnee: { x: 0.5, y: 0.75 }, leftAnkle: { x: 0.5, y: 0.95 }, leftWrist: wrist,
+});
+
+test('armRaise: 0 hanging at the side, 90 straight forward, 180 overhead', () => {
+  near(computeMetrics(arm({ x: 0.5, y: 0.55 }), 1).armRaise, 0);
+  near(computeMetrics(arm({ x: 0.75, y: 0.3 }), 1).armRaise, 90);
+  near(computeMetrics(arm({ x: 0.5, y: 0.05 }), 1).armRaise, 180);
+});
+
+test('armRaise is 0 when the wrist is not seen', () => {
+  assert.equal(computeMetrics(arm({ x: 0.5, y: 0.05, visibility: 0.1 }), 1).armRaise, 0);
+});
