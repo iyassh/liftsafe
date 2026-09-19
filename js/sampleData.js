@@ -1,6 +1,8 @@
 // Demo records for the supervisor dashboard. Every worker is flagged `sample: true`
 // so the UI can tag the rows and remove them without touching real records.
 // Dates are offsets from `now`, so the mix of statuses looks the same on any day.
+import { checkinsOf } from './store.js';
+
 import { PACKS, DEFAULT_PACK } from './packs.js';
 
 const DAY = 86400000;
@@ -66,7 +68,17 @@ function weekdayRun(now) {
   return [0, ...back];
 }
 
-const worker = (name, sessions, checkins) => ({ name, sample: true, sessions, checkins });
+// Demo sign-in. Everyone on the demo roster uses worker PIN 1234; the demo manager PIN is 9999.
+// Both are shown on the kiosk while the demo business is loaded.
+export const DEMO_PINS = { worker: '1234', manager: '9999' };
+const DEMO_WORKER_PIN = { salt: 'demo-worker', hash: 'a8d666225679c565e5ba4fd495f6a6168265ea275a8d326d43f1b84431cc183d' };
+const DEMO_MANAGER_PIN = { salt: 'demo-manager', hash: 'e43957dd0d6e41c0609ead1c7b7d4a0529674ca3a97443a77394bebeecdb8d22' };
+export const DEMO_BUSINESS = { name: 'Hillside Movers (demo)', managerPin: DEMO_MANAGER_PIN, demo: true };
+
+const slug = (name) => name.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+const worker = (name, sessions, checkins) => ({
+  id: `demo-${slug(name)}`, name, pin: DEMO_WORKER_PIN, sample: true, sessions, checkins,
+});
 
 // With the default 90-day interval: Tavita is overdue, Ingrid is due soon, Noor has only warmed up
 // and is not certified, the rest are current. Tavita has not warmed up this week; Bao not today.
@@ -95,3 +107,38 @@ export function sampleWorkers(now) {
     worker('Noor Castellanos', [], checkins(now, [0, 1])),
   ];
 }
+
+// ---------- loading and clearing sample data ----------
+
+const norm = (name) => name.trim().toLowerCase();
+
+// Sample dates are relative to `now`, so loading again replaces the made-up records
+// rather than skipping names already present: yesterday's sample rows would otherwise
+// go stale. Real records on a sample worker are kept and merged in date order.
+export function mergeSample(db, now) {
+  const kept = withoutSample(db).workers;
+  const byDate = (a, b) => a.date - b.date;
+  const merged = sampleWorkers(now).map((s) => {
+    const real = kept.find((w) => norm(w.name) === norm(s.name));
+    if (!real) return s;
+    return {
+      ...s,
+      sessions: [...s.sessions, ...real.sessions].sort(byDate),
+      checkins: [...checkinsOf(s), ...checkinsOf(real)].sort(byDate),
+    };
+  });
+  const sampleNames = new Set(merged.map((w) => norm(w.name)));
+  return { ...db, workers: [...kept.filter((w) => !sampleNames.has(norm(w.name))), ...merged] };
+}
+
+// A Recheck or a warm-up on a sample row appends a real record to that worker. Keep those:
+// drop only the made-up sessions and check-ins, and the sample flag with them.
+function realPart(w) {
+  if (w.sample !== true) return w;
+  const sessions = (w.sessions ?? []).filter((s) => s.sample !== true);
+  const checkins = checkinsOf(w).filter((c) => c.sample !== true);
+  // Real records stay with the person, so they can still sign in afterwards.
+  return sessions.length + checkins.length ? { id: w.id, name: w.name, pin: w.pin, sessions, checkins } : null;
+}
+
+export const withoutSample = (db) => ({ ...db, workers: (db.workers ?? []).map(realPart).filter(Boolean) });

@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>My shift · LiftSafe</title>
+  <link rel="icon" href="data:,">
+  <link rel="stylesheet" href="css/base.css">
+  <link rel="stylesheet" href="css/app.css">
+</head>
+<body>
+  <div class="wrap">
+    <header class="topbar">
+      <a class="brand" href="app.html">Lift<span>Safe</span></a>
+      <span class="badge">🔒 Video never leaves this device</span>
+    </header>
+
+    <main id="worker" hidden>
+      <div class="hello">
+        <div>
+          <p class="eyebrow" id="bizTitle"></p>
+          <h1 id="greeting"></h1>
+        </div>
+        <button class="btn btn-ghost" type="button" id="signOut">Sign out</button>
+      </div>
+
+      <section class="status-grid" aria-label="Your status">
+        <div class="card"><p class="stat-label muted">Today</p><p class="stat-value" id="todayStatus"></p></div>
+        <div class="card"><p class="stat-label muted">Streak</p><p class="stat-value" id="streakValue"></p></div>
+        <div class="card"><p class="stat-label muted">Lift certification</p><p class="stat-value" id="certStatus"></p><p class="muted small" id="certDetail"></p></div>
+      </section>
+
+      <section class="actions">
+        <a class="btn btn-big" id="warmupBtn" href="warmup.html">Start warm-up<small id="warmupSub"></small></a>
+        <a class="btn btn-ghost btn-big" id="liftBtn" href="check.html">Lift check<small id="liftSub"></small></a>
+      </section>
+
+      <section class="card tip" id="tipCard" hidden>
+        <p class="stat-label muted">Your focus</p>
+        <p class="stat-value" id="tipLabel"></p>
+        <p id="tipText"></p>
+      </section>
+
+      <h2>Your lift checks</h2>
+      <section class="card">
+        <ul class="history" id="history"></ul>
+        <p class="muted" id="noHistory" hidden>No lift checks yet. Your first one sets your certification.</p>
+      </section>
+    </main>
+  </div>
+  <script type="module" src="js/worker.js"></script>
+</body>
+</html>

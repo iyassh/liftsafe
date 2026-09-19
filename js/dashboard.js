@@ -5,7 +5,7 @@ import {
 } from './store.js';
 import { FAULTS } from './engine/scoring.js';
 import { PACKS, DEFAULT_PACK } from './packs.js';
-import { sampleWorkers } from './sampleData.js';
+import { mergeSample, withoutSample } from './sampleData.js';
 
 const SVG_NS = 'http://www.w3.org/2000/svg';
 const CONFIRM_MS = 4000;
@@ -71,35 +71,7 @@ export function longestStreak(db, now) {
 
 export const lastWarmup = (w) => checkinsOf(w).reduce((max, c) => Math.max(max, c.date), -Infinity);
 
-// Sample dates are relative to `now`, so loading again replaces the made-up records
-// rather than skipping names already present: yesterday's sample rows would otherwise
-// go stale. Real records on a sample worker are kept and merged in date order.
-export function mergeSample(db, now) {
-  const kept = withoutSample(db).workers;
-  const byDate = (a, b) => a.date - b.date;
-  const merged = sampleWorkers(now).map((s) => {
-    const real = kept.find((w) => norm(w.name) === norm(s.name));
-    if (!real) return s;
-    return {
-      ...s,
-      sessions: [...s.sessions, ...real.sessions].sort(byDate),
-      checkins: [...checkinsOf(s), ...checkinsOf(real)].sort(byDate),
-    };
-  });
-  const sampleNames = new Set(merged.map((w) => norm(w.name)));
-  return { ...db, workers: [...kept.filter((w) => !sampleNames.has(norm(w.name))), ...merged] };
-}
-
-// A Recheck or a warm-up on a sample row appends a real record to that worker. Keep those:
-// drop only the made-up sessions and check-ins, and the sample flag with them.
-function realPart(w) {
-  if (w.sample !== true) return w;
-  const sessions = (w.sessions ?? []).filter((s) => s.sample !== true);
-  const checkins = checkinsOf(w).filter((c) => c.sample !== true);
-  return sessions.length + checkins.length ? { name: w.name, sessions, checkins } : null;
-}
-
-export const withoutSample = (db) => ({ ...db, workers: (db.workers ?? []).map(realPart).filter(Boolean) });
+export { mergeSample, withoutSample };
 
 function el(tag, className, text) {
   const node = document.createElement(tag);

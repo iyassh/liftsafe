@@ -186,3 +186,21 @@ test('refreshing keeps a real record on a sample worker, and clearing still leav
   assert.ok(worker.sessions.every((s, i, all) => i === 0 || all[i - 1].date <= s.date), 'sessions stay in date order');
   assert.deepEqual(withoutSample(db).workers.map((w) => w.sessions.length), [1]);
 });
+
+// ---------- demo business (kiosk) ----------
+import { DEMO_PINS, DEMO_BUSINESS } from '../js/sampleData.js';
+import { checkPin } from '../js/auth.js';
+
+test('every demo worker can sign in with the demo PIN, and ids are unique and stable', async () => {
+  const now = new Date(2026, 8, 19, 11).getTime();
+  const workers = sampleWorkers(now);
+  for (const w of workers) assert.equal(await checkPin(DEMO_PINS.worker, w.pin), true, w.name);
+  assert.equal(new Set(workers.map((w) => w.id)).size, workers.length);
+  assert.deepEqual(workers.map((w) => w.id), sampleWorkers(now + 86400000).map((w) => w.id));
+});
+
+test('the demo manager PIN opens the demo business, and the worker PIN does not', async () => {
+  assert.equal(await checkPin(DEMO_PINS.manager, DEMO_BUSINESS.managerPin), true);
+  assert.equal(await checkPin(DEMO_PINS.worker, DEMO_BUSINESS.managerPin), false);
+  assert.equal(DEMO_BUSINESS.demo, true);
+});

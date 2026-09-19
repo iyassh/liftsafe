@@ -1,0 +1,91 @@
+/* Kiosk, worker home and manager pages. Big targets: this runs on a shared device
+   people tap with work gloves half off, a few seconds before a shift. */
+h1 { font-size: clamp(1.8rem, 4vw, 2.8rem); letter-spacing: -0.02em; margin: 0 0 6px; }
+h2 { font-size: 1.25rem; margin: 28px 0 10px; }
+.small { font-size: 0.85rem; }
+.eyebrow { margin: 0 0 4px; color: var(--accent); font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; font-size: 0.85rem; }
+
+/* ---------- setup ---------- */
+.setup { max-width: 620px; margin: 24px auto; padding: 28px; }
+.setup label { display: block; margin: 18px 0 6px; font-weight: 600; }
+.setup select, .panel-form select {
+  width: 100%; padding: 16px; border-radius: var(--radius); border: 1px solid var(--line);
+  background: var(--surface-2); color: var(--text); font: inherit;
+}
+.pin-input { letter-spacing: 0.4em; max-width: 9ch; }
+.add-row { display: flex; gap: 10px; flex-wrap: wrap; }
+.add-row input:first-child { flex: 1 1 200px; }
+.add-row .pin-input { flex: 0 0 8ch; }
+.team-list { list-style: none; margin: 0 0 12px; padding: 0; }
+.team-list li { display: flex; align-items: center; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--line); }
+.team-list li span:first-child { flex: 1; font-weight: 600; }
+.link-btn { background: none; border: 0; color: var(--muted); font: inherit; text-decoration: underline; cursor: pointer; padding: 4px; }
+.link-btn:hover { color: var(--text); }
+.form-error { margin: 14px 0 0; font-weight: 600; }
+.setup .btn-big { width: 100%; margin-top: 22px; }
+.or { display: flex; align-items: center; gap: 12px; margin: 26px 0 0; color: var(--muted); }
+.or::before, .or::after { content: ''; flex: 1; height: 1px; background: var(--line); }
+
+/* ---------- kiosk ---------- */
+.kiosk-head { display: flex; justify-content: space-between; align-items: flex-end; gap: 16px; flex-wrap: wrap; margin: 12px 0 22px; }
+.clock { margin: 0; font-size: clamp(1.6rem, 4vw, 2.4rem); font-weight: 800; color: var(--muted); font-variant-numeric: tabular-nums; }
+.demo-note { margin: 0 0 20px; padding: 12px 16px; border-style: dashed; color: var(--muted); }
+.tiles-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 14px; }
+.worker-tile {
+  display: flex; flex-direction: column; align-items: flex-start; gap: 6px; position: relative;
+  min-height: 120px; padding: 20px; border-radius: var(--radius); border: 1px solid var(--line);
+  background: var(--surface); color: var(--text); font: inherit; text-align: left; cursor: pointer;
+}
+.worker-tile:hover, .worker-tile:focus-visible { border-color: var(--accent); outline: none; }
+.tile-name { font-size: 1.35rem; font-weight: 800; line-height: 1.2; padding-right: 52px; }
+.tile-status { font-size: 0.95rem; }
+.tile-streak { position: absolute; top: 14px; right: 16px; font-weight: 700; }
+.kiosk-foot { display: flex; justify-content: space-between; align-items: center; gap: 16px; flex-wrap: wrap; margin-top: 32px; }
+.guest { display: flex; gap: 14px; flex-wrap: wrap; align-items: center; font-size: 0.95rem; }
+
+/* ---------- PIN pad ---------- */
+.pin-overlay { position: fixed; inset: 0; z-index: 50; display: grid; place-items: center; padding: 16px; background: rgb(0 0 0 / 0.72); }
+.pin-card { width: min(360px, 100%); text-align: center; padding: 26px; }
+.pin-card h2 { margin: 2px 0 18px; font-size: 1.6rem; }
+.pin-card p { margin: 0; }
+.pin-dots { display: flex; justify-content: center; gap: 16px; margin-bottom: 14px; }
+.pin-dots span { width: 18px; height: 18px; border-radius: 50%; border: 2px solid var(--muted); }
+.pin-dots span.filled { background: var(--accent); border-color: var(--accent); }
+.pin-dots.shake { animation: shake 0.35s; }
+@keyframes shake { 25% { transform: translateX(-8px); } 50% { transform: translateX(8px); } 75% { transform: translateX(-5px); } }
+.pin-pad { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin: 16px 0; }
+.pin-key {
+  padding: 18px 0; border-radius: var(--radius); border: 1px solid var(--line);
+  background: var(--surface-2); color: var(--text); font: inherit; font-size: 1.5rem; font-weight: 700; cursor: pointer;
+}
+.pin-key:hover { border-color: var(--accent); }
+.pin-key:active { background: var(--accent); color: #111; }
+@media (prefers-reduced-motion: reduce) { .pin-dots.shake { animation: none; } }
+
+/* ---------- worker home ---------- */
+.hello { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; flex-wrap: wrap; margin: 12px 0 22px; }
+.status-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px; margin-bottom: 22px; }
+.status-grid .card p { margin: 0; }
+.stat-label { text-transform: uppercase; letter-spacing: 0.06em; font-size: 0.8rem; }
+.stat-value { font-size: 1.7rem; font-weight: 800; margin-top: 6px !important; line-height: 1.2; }
+.actions { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 14px; margin-bottom: 8px; }
+.actions .btn { flex-direction: column; gap: 4px; padding: 26px 20px; }
+.actions .btn small { font-weight: 500; font-size: 0.9rem; opacity: 0.8; }
+.history { list-style: none; margin: 0; padding: 0; }
+.history li { display: flex; justify-content: space-between; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--line); }
+.history li:last-child { border-bottom: 0; }
+.tip { border-left: 4px solid var(--accent); }
+
+/* ---------- manager: team and settings ---------- */
+.subnav { display: flex; gap: 8px; flex-wrap: wrap; margin: 4px 0 20px; }
+.subnav a { padding: 8px 16px; border-radius: 999px; border: 1px solid var(--line); text-decoration: none; color: var(--muted); font-size: 0.95rem; }
+.subnav a[aria-current='page'] { color: #111; background: var(--accent); border-color: var(--accent); font-weight: 700; }
+.subnav .spacer { flex: 1; }
+.panel-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 18px; align-items: start; }
+.panel-form label { display: block; margin: 16px 0 6px; font-weight: 600; }
+.panel-form .btn { margin-top: 18px; }
+.roster { list-style: none; margin: 0; padding: 0; }
+.roster li { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; padding: 12px 0; border-bottom: 1px solid var(--line); }
+.roster li:last-child { border-bottom: 0; }
+.roster .who { flex: 1 1 160px; font-weight: 700; }
+.saved-note { margin: 12px 0 0; font-weight: 600; }
