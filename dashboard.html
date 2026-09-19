@@ -4,6 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Dashboard · LiftSafe</title>
+  <link rel="icon" href="data:,">
   <link rel="stylesheet" href="css/base.css">
   <link rel="stylesheet" href="css/dashboard.css">
 </head>
@@ -13,6 +14,7 @@
       <a class="brand" href="index.html">Lift<span>Safe</span></a>
       <nav class="nav" aria-label="Main">
         <a href="check.html">Lift check</a>
+        <a href="warmup.html">Warm-up</a>
         <a href="dashboard.html" aria-current="page">Dashboard</a>
       </nav>
       <span class="badge">🔒 Video never leaves this device</span>
@@ -24,16 +26,34 @@
           <h1>Training records</h1>
           <p class="muted" id="interval"></p>
         </div>
+        <div class="pack-field">
+          <label for="pack">Business type</label>
+          <select id="pack"></select>
+          <p class="muted">Sets the warm-up movements for this site.</p>
+        </div>
         <a class="btn" href="check.html">Start a lift check</a>
       </div>
 
-      <section class="tiles" id="tiles" aria-label="Summary"></section>
+      <section class="today" id="today" aria-labelledby="today-title" hidden>
+        <div class="section-head">
+          <h2 id="today-title">Today's shift start</h2>
+          <p class="muted" id="today-date"></p>
+        </div>
+        <div class="tiles" id="today-tiles"></div>
+        <p class="muted section-note">Soreness is self-reported so you can check in with the worker. It never blocks anyone from working.</p>
+      </section>
+
+      <div class="section-head">
+        <h2 id="cert-title">Lift certification</h2>
+      </div>
+      <section class="tiles" id="tiles" aria-labelledby="cert-title"></section>
 
       <section class="card empty" id="empty" hidden>
         <h2>No training records yet</h2>
         <p class="muted">Run a two-minute lift check and the result shows up here. Only scores are saved, never video.</p>
         <div class="empty-actions">
           <a class="btn" href="check.html">Start a lift check</a>
+          <a class="btn btn-ghost" href="warmup.html">Start a warm-up</a>
           <button class="btn btn-ghost" type="button" data-action="load-sample">Load sample data</button>
         </div>
       </section>
@@ -52,6 +72,8 @@
                 <th scope="col">Last check</th>
                 <th scope="col">Next recheck</th>
                 <th scope="col">Status</th>
+                <th scope="col">Streak</th>
+                <th scope="col">Last warm-up</th>
                 <th scope="col"><span class="sr-only">Action</span></th>
               </tr>
             </thead>

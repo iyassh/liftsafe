@@ -1,4 +1,6 @@
 /* Supervisor dashboard. Tokens and shared components come from base.css. */
+/* Wider than the other pages so the nine-column table fits a laptop screen without scrolling. */
+.wrap { max-width: 1360px; }
 .dash-head {
   display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; flex-wrap: wrap;
   margin: 16px 0 24px;
@@ -6,9 +8,25 @@
 .dash-head h1 { margin: 0; font-size: 2rem; letter-spacing: -0.02em; }
 .dash-head p { margin: 4px 0 0; }
 
+.pack-field { flex: 0 1 400px; min-width: 0; }
+.pack-field label { display: block; margin-bottom: 6px; color: var(--muted); font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.06em; }
+.pack-field select {
+  width: 100%; padding: 10px 12px; border: 1px solid var(--line); border-radius: var(--radius);
+  background: var(--surface-2); color: var(--text); font: inherit; font-size: 1rem;
+}
+.pack-field select:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
+.pack-field p { font-size: 0.85rem; }
+
+.today { margin-bottom: 32px; }
+.section-head { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; margin: 0 0 12px; }
+.section-head h2 { margin: 0; font-size: 1.3rem; }
+.section-head p { margin: 0; }
+.section-note { margin: -12px 0 0; font-size: 0.85rem; }
+
 .tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 16px; margin-bottom: 24px; }
 .tile-label { margin: 0 0 6px; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.06em; }
 .tile-value { margin: 0; font-size: 2.4rem; font-weight: 800; line-height: 1.1; font-variant-numeric: tabular-nums; }
+.tile-list { margin: 8px 0 0; padding: 0; list-style: none; color: var(--muted); font-size: 0.9rem; overflow-wrap: anywhere; }
 .tile-value.is-text { font-size: 1.2rem; line-height: 1.3; padding-top: 6px; }
 
 .empty { text-align: center; padding: 48px 20px; }
@@ -21,8 +39,8 @@
 /* Wide tables scroll inside the card so the page itself never scrolls sideways. */
 /* Positioned so the .sr-only spans in the table scroll with it instead of widening the page. */
 .table-scroll { overflow-x: auto; position: relative; }
-table { width: 100%; min-width: 860px; border-collapse: collapse; }
-th, td { padding: 14px 14px; text-align: left; white-space: nowrap; }
+table { width: 100%; min-width: 1120px; border-collapse: collapse; }
+th, td { padding: 14px 10px; text-align: left; white-space: nowrap; }
 th:first-child, td:first-child { padding-left: 20px; }
 th:last-child, td:last-child { padding-right: 20px; }
 th {
@@ -48,6 +66,11 @@ tbody tr:hover { background: var(--surface-2); }
 
 .recheck { color: var(--accent); font-weight: 700; text-decoration: none; }
 .recheck:hover { text-decoration: underline; }
+.warmup-link { display: block; color: var(--muted); font-size: 0.85rem; }
+.warmup-link:hover { color: var(--text); }
+.streak { font-variant-numeric: tabular-nums; font-weight: 700; }
+/* base.css has ok, warn and bad; "Not certified" is none of those. */
+.pill-neutral { background: var(--surface-2); color: var(--muted); }
 
 .tools { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 24px; }
 .btn-small { padding: 10px 16px; font-size: 0.95rem; font-weight: 600; }

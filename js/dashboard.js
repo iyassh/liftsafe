@@ -1,7 +1,10 @@
 // Supervisor dashboard. Everything is rebuilt from load() after each action, so the
 // page never holds a copy of the records that could drift from localStorage.
-import { load, save, emptyDb, latest, nextDue, workerStatus, mostCommonFault } from './store.js';
+import {
+  load, save, emptyDb, latest, nextDue, workerStatus, mostCommonFault, checkinsOf, streak, todaySummary,
+} from './store.js';
 import { FAULTS } from './engine/scoring.js';
+import { PACKS, DEFAULT_PACK } from './packs.js';
 import { sampleWorkers } from './sampleData.js';
 
 const SVG_NS = 'http://www.w3.org/2000/svg';
@@ -12,8 +15,10 @@ const MIN_SPAN = 20;
 const STATUS = {
   overdue: { rank: 0, label: 'Overdue', pill: 'pill-bad' },
   'due-soon': { rank: 1, label: 'Due soon', pill: 'pill-warn' },
-  current: { rank: 2, label: 'Current', pill: 'pill-ok' },
+  uncertified: { rank: 2, label: 'Not certified', pill: 'pill-neutral' },
+  current: { rank: 3, label: 'Current', pill: 'pill-ok' },
 };
+const SORENESS = { 'lower-back': 'Lower back', shoulders: 'Shoulders', knees: 'Knees', other: 'Other' };
 
 const norm = (name) => name.trim().toLowerCase();
 
@@ -22,46 +27,76 @@ export const bandClass = (score) => (score >= 70 ? 'text-ok' : score >= 50 ? 'te
 // Built by hand: toLocaleDateString gives "Sep 19, 2026" for en-CA and "19 Sept 2026"
 // for en-GB depending on the browser's ICU data. The design calls for "19 Sep 2026".
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+const WEEKDAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 
 export function formatDate(ms) {
   const d = new Date(ms);
   return `${d.getDate()} ${MONTHS[d.getMonth()]} ${d.getFullYear()}`;
 }
 
-// A record with no sessions would break latest(); load() does not check scores, and one
-// hand-edited record without a number would turn the average into NaN.
+// load() does not check scores, and one hand-edited record without a number would turn the
+// average into NaN. A worker who has only warmed up has no sessions at all, which is normal.
 const tracked = (db) => (db.workers ?? [])
-  .filter((w) => w.sessions?.length > 0 && w.sessions.every((s) => Number.isFinite(s.score)));
+  .filter((w) => Array.isArray(w.sessions) && w.sessions.every((s) => Number.isFinite(s.score)));
+
+const certified = (db) => tracked(db).filter((w) => w.sessions.length > 0);
+
+// Uncertified workers have no due date, so they go by name.
+const byDue = (a, b) => (a.due === null || b.due === null ? a.worker.name.localeCompare(b.worker.name) : a.due - b.due);
 
 export function sortedRows(db, now) {
   return tracked(db)
     .map((w) => ({ worker: w, status: workerStatus(w, now, db.intervalDays), due: nextDue(w, db.intervalDays) }))
-    .sort((a, b) => STATUS[a.status].rank - STATUS[b.status].rank || a.due - b.due);
+    .sort((a, b) => STATUS[a.status].rank - STATUS[b.status].rank || byDue(a, b));
 }
 
 export function summary(db, now) {
-  const workers = tracked(db);
+  const workers = certified(db);
   const scores = workers.map((w) => latest(w).score);
   return {
-    trained: workers.length,
+    workers: tracked(db).length,
     average: scores.length ? Math.round(scores.reduce((a, b) => a + b, 0) / scores.length) : null,
     overdue: workers.filter((w) => workerStatus(w, now, db.intervalDays) === 'overdue').length,
     fault: mostCommonFault({ ...db, workers }),
   };
 }
 
-export function mergeSample(db, now) {
-  const taken = new Set((db.workers ?? []).map((w) => norm(w.name)));
-  const fresh = sampleWorkers(now).filter((w) => !taken.has(norm(w.name)));
-  return { ...db, workers: [...(db.workers ?? []), ...fresh] };
+export const participationClass = (pct) => (pct >= 80 ? 'text-ok' : pct >= 50 ? 'text-warn' : 'text-bad');
+
+export function longestStreak(db, now) {
+  return tracked(db)
+    .map((w) => ({ name: w.name, shifts: streak(w, now) }))
+    .reduce((best, s) => (s.shifts > best.shifts ? s : best), { name: null, shifts: 0 });
 }
 
-// A Recheck on a sample row appends a real session to that worker. Keep those: drop only
-// the made-up sessions, and the sample flag with them.
+export const lastWarmup = (w) => checkinsOf(w).reduce((max, c) => Math.max(max, c.date), -Infinity);
+
+// Sample dates are relative to `now`, so loading again replaces the made-up records
+// rather than skipping names already present: yesterday's sample rows would otherwise
+// go stale. Real records on a sample worker are kept and merged in date order.
+export function mergeSample(db, now) {
+  const kept = withoutSample(db).workers;
+  const byDate = (a, b) => a.date - b.date;
+  const merged = sampleWorkers(now).map((s) => {
+    const real = kept.find((w) => norm(w.name) === norm(s.name));
+    if (!real) return s;
+    return {
+      ...s,
+      sessions: [...s.sessions, ...real.sessions].sort(byDate),
+      checkins: [...checkinsOf(s), ...checkinsOf(real)].sort(byDate),
+    };
+  });
+  const sampleNames = new Set(merged.map((w) => norm(w.name)));
+  return { ...db, workers: [...kept.filter((w) => !sampleNames.has(norm(w.name))), ...merged] };
+}
+
+// A Recheck or a warm-up on a sample row appends a real record to that worker. Keep those:
+// drop only the made-up sessions and check-ins, and the sample flag with them.
 function realPart(w) {
   if (w.sample !== true) return w;
   const sessions = (w.sessions ?? []).filter((s) => s.sample !== true);
-  return sessions.length ? { name: w.name, sessions } : null;
+  const checkins = checkinsOf(w).filter((c) => c.sample !== true);
+  return sessions.length + checkins.length ? { name: w.name, sessions, checkins } : null;
 }
 
 export const withoutSample = (db) => ({ ...db, workers: (db.workers ?? []).map(realPart).filter(Boolean) });
@@ -73,16 +108,34 @@ function el(tag, className, text) {
   return node;
 }
 
-function tile(label, value, valueClass = '') {
+function tile(label, value, valueClass = '', details = []) {
   const card = el('div', 'card');
   card.append(el('p', 'tile-label muted', label), el('p', `tile-value ${valueClass}`.trim(), value));
+  if (details.length) {
+    const list = el('ul', 'tile-list');
+    list.append(...details.map((d) => el('li', '', d)));
+    card.append(list);
+  }
   return card;
+}
+
+function renderToday(db, now) {
+  const t = todaySummary({ ...db, workers: tracked(db) }, now);
+  const best = longestStreak(db, now);
+  const flags = t.soreness.map((f) => `${f.name} · ${SORENESS[f.area] ?? SORENESS.other}`);
+  document.getElementById('today-date').textContent = `${WEEKDAYS[new Date(now).getDay()]} ${formatDate(now)}`;
+  document.getElementById('today-tiles').replaceChildren(
+    tile('Checked in today', `${t.checkedIn} of ${t.total}`),
+    tile('7-day participation', `${t.participation7d}%`, participationClass(t.participation7d)),
+    tile('Soreness flags', String(flags.length), flags.length > 0 ? 'text-warn' : '', flags),
+    tile('Longest streak', best.shifts ? `${best.shifts} ${best.shifts === 1 ? 'shift' : 'shifts'}` : '—', '', best.shifts ? [best.name] : []),
+  );
 }
 
 function renderTiles(db, now) {
   const s = summary(db, now);
   document.getElementById('tiles').replaceChildren(
-    tile('Workers trained', String(s.trained)),
+    tile('Workers', String(s.workers)),
     tile('Average latest score', s.average === null ? '—' : String(s.average), s.average === null ? '' : bandClass(s.average)),
     tile('Overdue rechecks', String(s.overdue), s.overdue > 0 ? 'text-bad' : ''),
     tile('Most common issue', FAULTS[s.fault]?.label ?? 'None yet', 'is-text'),
@@ -138,7 +191,31 @@ function trendCell(worker) {
   return td;
 }
 
-function row({ worker, status, due }) {
+function dash() {
+  const td = el('td');
+  td.append(el('span', 'muted', '—'));
+  return td;
+}
+
+const dateCell = (ms) => (Number.isFinite(ms) ? el('td', '', formatDate(ms)) : dash());
+
+function streakCell(shifts) {
+  if (shifts === 0) return dash();
+  const td = el('td', 'streak');
+  const flame = el('span', '', '🔥');
+  flame.setAttribute('aria-hidden', 'true');
+  td.append(flame, ` ${shifts}`, el('span', 'sr-only', shifts === 1 ? ' shift in a row' : ' shifts in a row'));
+  return td;
+}
+
+function actionLink(className, text, page, worker) {
+  const link = el('a', className, text);
+  link.href = `${page}?name=${encodeURIComponent(worker.name)}`;
+  link.setAttribute('aria-label', `${text} ${worker.name}`);
+  return link;
+}
+
+function row({ worker, status, due }, now) {
   const tr = el('tr');
   const last = latest(worker);
 
@@ -146,19 +223,22 @@ function row({ worker, status, due }) {
   name.append(el('span', 'name', worker.name));
   if (worker.sample === true) name.append(el('span', 'tag', 'Sample'));
 
-  const score = el('td');
-  score.append(el('span', `score ${bandClass(last.score)}`, String(last.score)));
+  const score = last ? el('td') : dash();
+  if (last) score.append(el('span', `score ${bandClass(last.score)}`, String(last.score)));
 
   const state = el('td');
   state.append(el('span', `pill ${STATUS[status].pill}`, STATUS[status].label));
 
-  const action = el('td');
-  const link = el('a', 'recheck', 'Recheck');
-  link.href = `check.html?name=${encodeURIComponent(worker.name)}`;
-  link.setAttribute('aria-label', `Recheck ${worker.name}`);
-  action.append(link);
+  const action = el('td', 'actions');
+  action.append(
+    actionLink('recheck', last ? 'Recheck' : 'Certify', 'check.html', worker),
+    actionLink('warmup-link', 'Warm-up', 'warmup.html', worker),
+  );
 
-  tr.append(name, score, trendCell(worker), el('td', '', formatDate(last.date)), el('td', '', formatDate(due)), state, action);
+  tr.append(
+    name, score, trendCell(worker), dateCell(last?.date), dateCell(due), state,
+    streakCell(streak(worker, now)), dateCell(lastWarmup(worker)), action,
+  );
   return tr;
 }
 
@@ -171,8 +251,11 @@ function render() {
   const isEmpty = rows.length === 0;
 
   document.getElementById('interval').textContent = `Recheck every ${db.intervalDays} days`;
+  document.getElementById('pack').value = db.pack in PACKS ? db.pack : DEFAULT_PACK;
+  renderToday(db, now);
   renderTiles(db, now);
-  document.getElementById('rows').replaceChildren(...rows.map(row));
+  document.getElementById('rows').replaceChildren(...rows.map((r) => row(r, now)));
+  document.getElementById('today').hidden = isEmpty;
   document.getElementById('empty').hidden = !isEmpty;
   document.getElementById('records').hidden = isEmpty;
   document.getElementById('sample-note').hidden = !hasSample;
@@ -215,7 +298,25 @@ const ACTIONS = {
   'clear-all': clearAll,
 };
 
+function initPack() {
+  const select = document.getElementById('pack');
+  for (const [id, pack] of Object.entries(PACKS)) {
+    const option = el('option', '', `${pack.name} · ${pack.blurb}`);
+    option.value = id;
+    select.append(option);
+  }
+  select.addEventListener('change', () => {
+    try {
+      save({ ...load(), pack: select.value });
+    } catch (err) {
+      console.warn('LiftSafe: could not save the business type', err);
+    }
+    render();
+  });
+}
+
 function init() {
+  initPack();
   document.addEventListener('click', (e) => {
     const action = e.target.closest('[data-action]')?.dataset.action;
     if (!action) return;

@@ -19,6 +19,9 @@
 .hero-sub { margin: 28px 0 36px; max-width: 34em; color: var(--muted); font-size: clamp(1.05rem, 1.6vw, 1.3rem); }
 
 .hero-actions { display: flex; flex-wrap: wrap; gap: 16px; }
+.hero-more { margin: 20px 0 0; font-size: 1.05rem; font-weight: 600; }
+.hero-more a { color: var(--muted); text-underline-offset: 4px; }
+.hero-more a:hover { color: var(--text); }
 
 /* Framed like the camera view on check.html so the landing page previews the product. */
 .hero-figure { margin: 0; }
@@ -51,6 +54,36 @@
   height: 14px; border-radius: 999px;
   background: repeating-linear-gradient(-45deg, var(--accent) 0 18px, #111 18px 36px);
 }
+
+.modules { padding: 72px 0 0; }
+.modules .section-title { margin-bottom: 16px; }
+.section-intro { margin: 0 0 32px; max-width: 40em; color: var(--muted); font-size: clamp(1.05rem, 1.6vw, 1.3rem); }
+.module-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 20px; margin: 0; padding: 0; list-style: none; }
+.module-grid li { display: flex; }
+/* The two live modules span half the row each; the roadmap sits smaller beneath them. */
+.module-grid li:nth-child(-n+2) { grid-column: span 2; }
+.module { display: flex; flex-direction: column; gap: 10px; width: 100%; padding: 24px; }
+.module-top { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 44px; }
+.module-name { font-size: 1.45rem; font-weight: 800; line-height: 1.15; letter-spacing: -0.02em; }
+.module-blurb { color: var(--muted); }
+
+.module-live { border-top: 4px solid var(--accent); text-decoration: none; transition: border-color 0.15s, transform 0.15s; }
+.module-live:hover, .module-live:focus-visible { border-color: var(--accent); transform: translateY(-2px); }
+.module-live .module-name { font-size: 1.8rem; }
+.module-icon { width: 44px; height: 44px; fill: none; stroke: var(--accent); stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; }
+.module-go { margin-top: auto; padding-top: 10px; color: var(--accent); font-weight: 700; }
+
+/* Roadmap only: flat, dashed and dimmed so it never reads as clickable or built. */
+.module-soon { background: transparent; border-style: dashed; cursor: default; }
+.module-soon .module-top { min-height: 0; }
+.module-soon .module-name { font-size: 1.2rem; color: var(--muted); }
+.module-soon .module-blurb { font-size: 0.95rem; opacity: 0.7; }
+.pill-soon { background: var(--surface-2); color: var(--muted); }
+
+.packs { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 20px; margin-top: 28px; }
+.pack-chips { display: flex; flex-wrap: wrap; gap: 8px; margin: 0; padding: 0; list-style: none; }
+.pack-chip { padding: 6px 14px; border: 1px solid var(--line); border-radius: 999px; background: var(--surface); font-size: 0.9rem; font-weight: 700; }
+.packs-note { margin: 0; }
 
 .features { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 20px; padding: 72px 0 0; }
 .feature { padding: 28px; border-top: 4px solid var(--accent); }
@@ -87,18 +120,33 @@
 /* .muted is tuned for the dark page; on the yellow strip it needs a dark tone to stay readable. */
 .why .source { margin: 24px 0 0; font-size: 0.85rem; color: rgba(17, 17, 17, 0.72); }
 
-.footer { margin-top: 72px; padding-top: 24px; border-top: 1px solid var(--line); font-size: 0.95rem; }
+.pricing {
+  display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 16px 40px;
+  margin-top: 72px; padding: 32px 0; border-top: 1px solid var(--line);
+}
+.price { margin: 0; font-size: clamp(1.4rem, 3vw, 2.2rem); font-weight: 800; line-height: 1.1; letter-spacing: -0.03em; }
+.price-amount { color: var(--accent); font-size: 2em; font-weight: 900; letter-spacing: -0.05em; }
+.price-detail p { margin: 0; }
+.price-detail .price-example { margin-top: 6px; font-weight: 600; }
+
+.footer { margin-top: 0; padding-top: 24px; border-top: 1px solid var(--line); font-size: 0.95rem; }
 .footer p { margin: 0 0 4px; }
 
 @media (max-width: 860px) {
   .hero { grid-template-columns: minmax(0, 1fr); gap: 40px; padding: 32px 0 56px; }
   .hero-figure { max-width: 420px; width: 100%; margin: 0 auto; }
   .features, .steps, .facts { grid-template-columns: minmax(0, 1fr); }
-  .features { padding-top: 56px; }
+  .features, .modules { padding-top: 56px; }
+  .module-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .how { padding-top: 72px; }
   .steps li { flex-direction: row; align-items: center; gap: 20px; }
   .step-num { flex: 0 0 1.1em; font-size: 3.5rem; text-align: center; }
   .why { margin-top: 72px; padding: 28px 22px; }
+}
+
+@media (max-width: 560px) {
+  .module-grid { grid-template-columns: minmax(0, 1fr); }
+  .module-grid li:nth-child(-n+2) { grid-column: auto; }
 }
 
 @media (max-width: 480px) {

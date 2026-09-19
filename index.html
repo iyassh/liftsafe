@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>LiftSafe: lift right, every time</title>
-  <meta name="description" content="An AI lifting-safety trainer for small businesses. Five lifts in front of any camera, instant coaching, and a training record for the employer.">
+  <meta name="description" content="LiftSafe turns any camera into a movement coach. Workers warm up and practise safe technique before every shift, and the employer gets proof it happened.">
   <link rel="stylesheet" href="css/base.css">
   <link rel="stylesheet" href="css/landing.css">
 </head>
@@ -14,6 +14,7 @@
       <a class="brand" href="index.html">Lift<span>Safe</span></a>
       <nav class="nav" aria-label="Main">
         <a href="check.html">Lift check</a>
+        <a href="warmup.html">Warm-up</a>
         <a href="dashboard.html">Dashboard</a>
       </nav>
       <span class="badge">🔒 Video never leaves this device</span>
@@ -22,13 +23,14 @@
     <main>
       <section class="hero">
         <div class="hero-copy">
-          <p class="eyebrow">AI lifting-safety trainer</p>
+          <p class="eyebrow">Movement coach for physical jobs</p>
           <h1>Lift right. <span class="hero-accent">Every time.</span></h1>
-          <p class="hero-sub">LiftSafe is an AI lifting-safety trainer for small businesses. Five lifts in front of any camera, instant coaching, and a training record for the employer.</p>
+          <p class="hero-sub">LiftSafe turns any camera into a movement coach. Workers warm up and practise safe technique before every shift, and the employer gets proof it happened.</p>
           <div class="hero-actions">
-            <a class="btn btn-big" href="check.html">Start a lift check</a>
-            <a class="btn btn-ghost btn-big" href="dashboard.html">Supervisor dashboard</a>
+            <a class="btn btn-big" href="warmup.html">Start a warm-up</a>
+            <a class="btn btn-ghost btn-big" href="check.html">Lift check</a>
           </div>
+          <p class="hero-more"><a href="dashboard.html">Supervisor dashboard →</a></p>
         </div>
 
         <figure class="hero-figure">
@@ -74,27 +76,99 @@
 
       <div class="hazard" aria-hidden="true"></div>
 
+      <section class="modules" aria-labelledby="modules-title">
+        <h2 class="section-title" id="modules-title">One engine. Built for your business.</h2>
+        <p class="section-intro">Every module runs on the same movement engine. Pick the ones your work needs.</p>
+        <ul class="module-grid">
+          <li>
+            <a class="card module module-live" href="warmup.html">
+              <span class="module-top">
+                <svg class="module-icon" viewBox="0 0 48 48" aria-hidden="true">
+                  <circle cx="24" cy="10" r="5"/>
+                  <path d="M24 15v15M24 20 12 8M24 20 36 8M24 30l-8 13M24 30l8 13"/>
+                </svg>
+                <span class="pill pill-ok">Live</span>
+              </span>
+              <span class="module-name">Pre-shift warm-up</span>
+              <span class="module-blurb">Three camera-verified movements at the start of every shift. About 3 minutes.</span>
+              <span class="module-go" aria-hidden="true">Open →</span>
+            </a>
+          </li>
+          <li>
+            <a class="card module module-live" href="check.html">
+              <span class="module-top">
+                <svg class="module-icon" viewBox="0 0 48 48" aria-hidden="true">
+                  <circle cx="17" cy="9" r="5"/>
+                  <path d="M16 15 11 28l11 5-6 10M16 17l7 9h5"/>
+                  <rect x="28" y="20" width="12" height="12" rx="2"/>
+                </svg>
+                <span class="pill pill-ok">Live</span>
+              </span>
+              <span class="module-name">Lift check</span>
+              <span class="module-blurb">Five lifts, live coaching and a Lift Safety Score. The quarterly certification.</span>
+              <span class="module-go" aria-hidden="true">Open →</span>
+            </a>
+          </li>
+          <li>
+            <div class="card module module-soon" aria-disabled="true">
+              <span class="module-top"><span class="pill pill-soon">Coming soon</span></span>
+              <span class="module-name">Overhead work</span>
+              <span class="module-blurb">Stocking, painting, drywall</span>
+            </div>
+          </li>
+          <li>
+            <div class="card module module-soon" aria-disabled="true">
+              <span class="module-top"><span class="pill pill-soon">Coming soon</span></span>
+              <span class="module-name">Patient handling</span>
+              <span class="module-blurb">Care homes and home care</span>
+            </div>
+          </li>
+          <li>
+            <div class="card module module-soon" aria-disabled="true">
+              <span class="module-top"><span class="pill pill-soon">Coming soon</span></span>
+              <span class="module-name">Housekeeping</span>
+              <span class="module-blurb">Hotels and cleaning crews</span>
+            </div>
+          </li>
+          <li>
+            <div class="card module module-soon" aria-disabled="true">
+              <span class="module-top"><span class="pill pill-soon">Coming soon</span></span>
+              <span class="module-name">Workstation tasks</span>
+              <span class="module-blurb">Assembly, food prep, bakeries</span>
+            </div>
+          </li>
+        </ul>
+        <div class="packs">
+          <ul class="pack-chips" aria-label="Packs">
+            <li class="pack-chip">Warehouse</li>
+            <li class="pack-chip">Movers &amp; delivery</li>
+            <li class="pack-chip">Retail &amp; stocking</li>
+          </ul>
+          <p class="packs-note muted">Packs set the warm-up for your kind of work.</p>
+        </div>
+      </section>
+
       <section class="features" aria-label="What you get">
         <article class="card feature">
           <h2><span class="feature-icon" aria-hidden="true">🔒</span> No video stored</h2>
           <p>Everything runs in your browser. Only scores are saved.</p>
         </article>
         <article class="card feature">
-          <h2><span class="feature-icon" aria-hidden="true">⏱&#xFE0F;</span> Two minutes</h2>
-          <p>Five practice lifts. No wearables, no consultant, no install.</p>
+          <h2><span class="feature-icon" aria-hidden="true">⏱&#xFE0F;</span> Three minutes</h2>
+          <p>A short routine at the start of the shift. No wearables, no consultant, no install.</p>
         </article>
         <article class="card feature">
           <h2><span class="feature-icon" aria-hidden="true">📋</span> Training record</h2>
-          <p>A dated result for every worker, with a recheck every 90 days.</p>
+          <p>A dated record for every worker: daily warm-ups and a lift certification every 90 days.</p>
         </article>
       </section>
 
       <section class="how" aria-labelledby="how-title">
         <h2 class="section-title" id="how-title">How it works</h2>
         <ol class="steps">
-          <li><span class="step-num" aria-hidden="true">1</span><span class="step-text">Stand side-on to the camera</span></li>
-          <li><span class="step-num" aria-hidden="true">2</span><span class="step-text">Do five lifts and get coached live</span></li>
-          <li><span class="step-num" aria-hidden="true">3</span><span class="step-text">Your supervisor gets the record</span></li>
+          <li><span class="step-num" aria-hidden="true">1</span><span class="step-text">Check in at the start of your shift</span></li>
+          <li><span class="step-num" aria-hidden="true">2</span><span class="step-text">Warm up while the camera coaches you</span></li>
+          <li><span class="step-num" aria-hidden="true">3</span><span class="step-text">Your supervisor sees who is shift-ready</span></li>
         </ol>
       </section>
 
@@ -105,6 +179,14 @@
           <p class="fact">About <strong>88,000</strong> claims and <strong>$2.35 billion</strong> in BC, 2020–2024.</p>
         </div>
         <p class="source muted">Source: WorkSafeBC</p>
+      </section>
+
+      <section class="pricing" aria-labelledby="pricing-title">
+        <h2 class="price" id="pricing-title"><span class="price-amount">$5</span> per worker per month</h2>
+        <div class="price-detail">
+          <p class="muted">$49 monthly minimum · no hardware · cancel anytime</p>
+          <p class="price-example">A 20-person crew is about $1,200 a year.</p>
+        </div>
       </section>
     </main>
 
