@@ -15,6 +15,26 @@ test('stooping with straight knees is heavily penalised', () => {
   assert.ok(r.faults.includes('trunk'));
 });
 
+// From a real webcam session: deliberate stoops measured 40–60° of trunk lean with
+// knees at 151–160°+, and five of them passed at 73. A stoop must fail on its own.
+test('a real-world stoop (moderate lean, straight knees) clearly fails', () => {
+  const r = scoreLift({ ...good, maxTrunk: 55, kneeAtMaxTrunk: 160 });
+  assert.ok(r.score <= 50, `score ${r.score}`);
+  assert.ok(scoreLift({ ...good, maxTrunk: 50, kneeAtMaxTrunk: 151 }).score <= 65);
+});
+
+test('the recorded bad-form session (four stoops and a deep forward lean) does not pass', () => {
+  const stoops = [151, 160, 156, 160].map((k) => ({ ...good, maxTrunk: 50, kneeAtMaxTrunk: k }));
+  const lean = { ...good, maxTrunk: 71, kneeAtMaxTrunk: 120 };
+  const session = summariseSession([...stoops, lean].map((l) => scoreLift(l)));
+  assert.equal(session.passed, false);
+  assert.equal(session.topFault, 'stoop');
+});
+
+test('a good lift with some forward lean and bent knees still scores well', () => {
+  assert.ok(scoreLift({ ...good, maxTrunk: 50, kneeAtMaxTrunk: 100 }).score >= 85);
+});
+
 test('bent knees excuse a forward trunk from the stoop fault', () => {
   assert.ok(!scoreLift({ ...good, maxTrunk: 55, kneeAtMaxTrunk: 100 }).faults.includes('stoop'));
 });

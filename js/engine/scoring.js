@@ -12,8 +12,10 @@ export const FAULTS = {
 // Starting points from the REBA trunk bands (20–60° moderate, >60° high) and the
 // NIOSH horizontal-distance idea. Tuned against real lifts.
 export const THRESHOLDS = {
-  stoopTrunk: 40, stoopKnee: [130, 160], stoopPenalty: 35,
-  trunk: [60, 90], trunkPenalty: 30,
+  // A stoop alone must fail a lift: real stoops measured 40–60° of lean with knees at
+  // 151–160°, and at 35 points five of them averaged a pass.
+  stoopTrunk: 40, stoopKnee: [130, 160], stoopPenalty: 50,
+  trunk: [45, 80], trunkPenalty: 30,
   reach: [0.8, 1.2], reachPenalty: 25,
   fastMs: 1000, fastPenalty: 10,
   passMark: 70,
