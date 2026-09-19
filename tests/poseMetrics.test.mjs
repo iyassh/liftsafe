@@ -55,6 +55,23 @@ test('a hidden wrist does not invent a reach value', () => {
   assert.equal(computeMetrics(p, 1).reach, 0);
 });
 
+// Seen on real footage: a waist-up shot, where MediaPipe guesses the legs below the frame.
+test('confident shoulder and hip do not make up for an unseen ankle', () => {
+  const p = pose({
+    leftShoulder: { x: 0.5, y: 0.3, visibility: 1 }, leftHip: { x: 0.5, y: 0.72, visibility: 0.99 },
+    leftKnee: { x: 0.5, y: 0.95, visibility: 0.61 }, leftAnkle: { x: 0.5, y: 0.98, visibility: 0.2 },
+  });
+  assert.equal(computeMetrics(p, 1).visible, false);
+});
+
+test('joints guessed outside the frame are not visible, whatever their confidence', () => {
+  const p = pose({
+    leftShoulder: { x: 0.5, y: 0.3 }, leftHip: { x: 0.5, y: 0.72 },
+    leftKnee: { x: 0.5, y: 1.02 }, leftAnkle: { x: 0.5, y: 1.23 },
+  });
+  assert.equal(computeMetrics(p, 1).visible, false);
+});
+
 test('not visible when key joints are hidden', () => {
   assert.equal(computeMetrics(pose({ leftShoulder: { x: 0.5, y: 0.3 } }), 1).visible, false);
 });

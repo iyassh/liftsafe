@@ -10,8 +10,14 @@ export const LM = {
 const CORE = ['Shoulder', 'Hip', 'Knee', 'Ankle'];
 const MIN_VIS = 0.5;
 
-const visOf = (lm) => lm.visibility ?? 0;
-const sideVis = (lms, side) => CORE.reduce((s, j) => s + visOf(lms[LM[side + j]]), 0) / CORE.length;
+// MediaPipe still guesses joints it cannot see, including ones below the frame,
+// so a joint outside 0..1 counts as unseen whatever confidence it reports.
+const inFrame = (lm) => lm.x >= 0 && lm.x <= 1 && lm.y >= 0 && lm.y <= 1;
+const visOf = (lm) => (inFrame(lm) ? lm.visibility ?? 0 : 0);
+
+// A side is only as visible as its weakest joint: averaging lets a confident
+// shoulder and hip hide an ankle that is not there.
+const sideVis = (lms, side) => Math.min(...CORE.map((j) => visOf(lms[LM[side + j]])));
 
 // Side-on, one half of the body faces the camera. Measure that half.
 export function pickSide(lms) {
