@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Team & settings · LiftSafe</title>
+  <link rel="icon" href="data:,">
+  <link rel="stylesheet" href="css/base.css">
+  <link rel="stylesheet" href="css/app.css">
+</head>
+<body>
+  <div class="wrap">
+    <header class="topbar">
+      <a class="brand" href="app.html">Lift<span>Safe</span></a>
+      <span class="badge">🔒 Video never leaves this device</span>
+    </header>
+
+    <nav class="subnav" aria-label="Manager">
+      <a href="dashboard.html">Dashboard</a>
+      <a href="team.html" aria-current="page">Team &amp; settings</a>
+      <span class="spacer"></span>
+      <button class="btn btn-ghost" type="button" id="signOut">Sign out</button>
+    </nav>
+
+    <main id="team" hidden>
+      <h1>Team &amp; settings</h1>
+      <p class="muted" id="bizLine"></p>
+
+      <div class="panel-grid">
+        <section class="card">
+          <h2>Your team</h2>
+          <ul class="roster" id="roster"></ul>
+          <p class="muted" id="noRoster" hidden>No one on the team yet.</p>
+
+          <form class="panel-form" id="addForm" novalidate>
+            <label for="newName">Add a worker</label>
+            <div class="add-row">
+              <input type="text" id="newName" maxlength="60" autocomplete="off" placeholder="Worker name">
+              <input type="text" id="newPin" class="pin-input" inputmode="numeric" maxlength="4" autocomplete="off" placeholder="PIN" aria-label="PIN, 4 digits">
+              <button class="btn" type="submit">Add</button>
+            </div>
+            <p class="form-error text-bad" id="teamError" role="alert" hidden></p>
+          </form>
+        </section>
+
+        <section class="card">
+          <h2>Settings</h2>
+          <form class="panel-form" id="settingsForm" novalidate>
+            <label for="bizName">Business name</label>
+            <input type="text" id="bizName" maxlength="60" autocomplete="off">
+
+            <label for="bizPack">Business type</label>
+            <select id="bizPack"></select>
+            <p class="muted small">Sets the warm-up movements for this site.</p>
+
+            <label for="interval">Lift check every</label>
+            <select id="interval">
+              <option value="30">30 days</option>
+              <option value="60">60 days</option>
+              <option value="90">90 days</option>
+              <option value="180">180 days</option>
+            </select>
+
+            <label for="mgrPin">New manager PIN <span class="muted">(leave blank to keep)</span></label>
+            <input type="text" id="mgrPin" class="pin-input" inputmode="numeric" maxlength="4" autocomplete="off" placeholder="••••">
+
+            <p class="form-error text-bad" id="settingsError" role="alert" hidden></p>
+            <button class="btn" type="submit">Save settings</button>
+            <p class="saved-note text-ok" id="settingsSaved" role="status" hidden>Saved ✓</p>
+          </form>
+
+          <h2>Records</h2>
+          <p class="muted small">Every lift check and warm-up as a spreadsheet. PINs are never included.</p>
+          <button class="btn btn-ghost" type="button" id="exportBtn">Download records (CSV)</button>
+        </section>
+      </div>
+    </main>
+  </div>
+  <script type="module" src="js/team.js"></script>
+</body>
+</html>

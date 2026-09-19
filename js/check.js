@@ -5,6 +5,7 @@ import { LiftAnalyzer } from './engine/liftAnalyzer.js';
 import { FAULTS, scoreLift, liveFaults, summariseSession } from './engine/scoring.js';
 import { devLog, devFlag } from './devLog.js';
 import { load, save, addSession } from './store.js';
+import { currentSession, touchSession } from './auth.js';
 
 const LIFTS_PER_SESSION = 5;
 const READY_HOLD_MS = 1500; // position must be good this long before scoring starts
@@ -364,6 +365,7 @@ function frameLifting(m, problem, now) {
 }
 
 function recordLift(result, now) {
+  touchSession(Date.now()); // a lift is activity: keep a kiosk session alive through the check
   state.scored.push(result);
   state.tipUntil = now + TIP_MS;
   renderPanel();
@@ -502,6 +504,14 @@ function renderDebug(m, problem) {
 // ---------- wiring ----------
 
 el.nameInput.value = (params.get('name') ?? '').slice(0, el.nameInput.maxLength);
+// Signed in at the kiosk: the name comes from the session, and finishing leads back there.
+const kioskWorker = currentSession(Date.now())?.role === 'worker' ? currentSession(Date.now()) : null;
+if (kioskWorker) {
+  el.nameInput.value = kioskWorker.name;
+  el.nameInput.readOnly = true;
+  el.dashLink.href = 'worker.html';
+  el.dashLink.textContent = 'Back to my page →';
+}
 el.nameInput.addEventListener('input', syncStartButton);
 el.nameForm.addEventListener('submit', (e) => {
   e.preventDefault();

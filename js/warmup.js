@@ -5,6 +5,7 @@ import { MOVEMENTS, MovementTracker } from './engine/movements.js';
 import { PACKS, DEFAULT_PACK } from './packs.js';
 import { devLog, devFlag } from './devLog.js';
 import { load, save, addCheckin, streak } from './store.js';
+import { currentSession, touchSession } from './auth.js';
 
 const READY_HOLD_MS = 1500; // position must be good this long before the first movement
 const READY_SHOW_MS = 700; // how long "✓ Ready" stays up
@@ -32,7 +33,7 @@ const el = {
   holdProgress: $('holdProgress'), holdSeconds: $('holdSeconds'), holdFill: $('holdFill'),
   skipBtn: $('skipBtn'), voiceBtn: $('voiceBtn'),
   doneName: $('doneName'), doneTime: $('doneTime'), doneStreak: $('doneStreak'), doneMoves: $('doneMoves'),
-  saveError: $('saveError'), retrySaveBtn: $('retrySaveBtn'), liftLink: $('liftLink'),
+  saveError: $('saveError'), retrySaveBtn: $('retrySaveBtn'), liftLink: $('liftLink'), doneHomeLink: $('doneHomeLink'),
   debug: $('debug'),
 };
 const ctx = el.canvas.getContext('2d');
@@ -354,6 +355,7 @@ function finishMovement(result) {
   if (state.finishing) return; // Skip pressed twice, or pressed as the last rep landed
   state.finishing = true;
   state.results.push(result);
+  touchSession(Date.now()); // activity: keep a kiosk session alive through the warm-up
   devLog.event('movement', { n: state.results.length, result });
   el.skipBtn.disabled = true;
   if (result.completed) setStageMsg('✓ Done', 'ok');
@@ -480,6 +482,14 @@ function renderDebug(m, problem) {
 // ---------- wiring ----------
 
 el.nameInput.value = (params.get('name') ?? '').slice(0, el.nameInput.maxLength);
+// Signed in at the kiosk: the name comes from the session, and finishing leads back there.
+const kioskWorker = currentSession(Date.now())?.role === 'worker' ? currentSession(Date.now()) : null;
+if (kioskWorker) {
+  el.nameInput.value = kioskWorker.name;
+  el.nameInput.readOnly = true;
+  el.doneHomeLink.href = 'worker.html';
+  el.doneHomeLink.textContent = 'Back to my page';
+}
 el.nameInput.addEventListener('input', syncStartButton);
 el.nameForm.addEventListener('submit', (e) => {
   e.preventDefault();

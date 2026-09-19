@@ -6,6 +6,7 @@ import {
 import { FAULTS } from './engine/scoring.js';
 import { PACKS, DEFAULT_PACK } from './packs.js';
 import { mergeSample, withoutSample } from './sampleData.js';
+import { requireRole, keepAlive, endSession } from './auth.js';
 
 const SVG_NS = 'http://www.w3.org/2000/svg';
 const CONFIRM_MS = 4000;
@@ -308,4 +309,12 @@ function init() {
 }
 
 // Guarded so the pure helpers above can be imported from node for checks.
-if (typeof document !== 'undefined') init();
+// In the browser this is the manager's area: no manager session, back to the kiosk.
+if (typeof document !== 'undefined' && requireRole(['manager'])) {
+  keepAlive();
+  document.getElementById('signOut').addEventListener('click', () => {
+    endSession();
+    location.replace('app.html');
+  });
+  init();
+}
