@@ -120,3 +120,78 @@ test('mostCommonFault tolerates a worker with no sessions', () => {
   const db = { intervalDays: 90, workers: [{ name: 'New', sessions: [] }] };
   assert.equal(mostCommonFault(db), null);
 });
+
+// ---------- check-ins (pre-shift warm-up) ----------
+import { addCheckin, streak, todaySummary } from '../js/store.js';
+
+const checkin = (soreness = null) => ({ soreness, completed: true, movements: [] });
+const noon = (dayOffset) => new Date(2026, 8, 21 + dayOffset, 12).getTime(); // Mon 21 Sep 2026 + n days
+
+test('addCheckin creates a worker with no lift sessions, and appends next time', () => {
+  let db = addCheckin(emptyDb(), 'Sam Lee', checkin(), noon(0));
+  db = addCheckin(db, ' sam  lee', checkin('lower-back'), noon(1));
+  assert.equal(db.workers.length, 1);
+  assert.deepEqual(db.workers[0].sessions, []);
+  assert.equal(db.workers[0].checkins.length, 2);
+  assert.equal(db.workers[0].checkins[1].date, noon(1));
+});
+
+test('a worker with check-ins but no lift check is uncertified, with no due date', () => {
+  const w = addCheckin(emptyDb(), 'Sam', checkin(), noon(0)).workers[0];
+  assert.equal(workerStatus(w, noon(0)), 'uncertified');
+  assert.equal(nextDue(w), null);
+});
+
+test('load keeps a check-in-only worker, and an old db without check-ins still loads', () => {
+  const mem = new Map();
+  const storage = { getItem: (k) => mem.get(k) ?? null, setItem: (k, v) => mem.set(k, v) };
+  save(addCheckin(emptyDb(), 'Sam', checkin(), noon(0)), storage);
+  assert.equal(load(storage).workers.length, 1);
+
+  const old = { intervalDays: 90, workers: [{ name: 'Old', sessions: [{ score: 80, date: t0 }] }] };
+  for (const k of mem.keys()) mem.set(k, JSON.stringify(old));
+  const db = load(storage);
+  assert.equal(db.workers.length, 1);
+  assert.equal(streak(db.workers[0], t0), 0);
+  assert.equal(todaySummary(db, t0).checkedIn, 0);
+});
+
+test('streak counts shifts in a row; a weekend does not break it, a week off does', () => {
+  let db = emptyDb();
+  for (const d of [0, 1, 2, 3, 4, 7, 8]) db = addCheckin(db, 'Sam', checkin(), noon(d)); // Mon–Fri, Mon, Tue
+  const w = db.workers[0];
+  assert.equal(streak(w, noon(8)), 7);
+  assert.equal(streak(w, noon(10)), 7); // two days later, still alive
+  assert.equal(streak(w, noon(14)), 0); // nothing for six days: gone
+  db = addCheckin(db, 'Sam', checkin(), noon(16));
+  assert.equal(streak(db.workers[0], noon(16)), 1);
+});
+
+test('two check-ins on the same day count once toward the streak', () => {
+  let db = addCheckin(emptyDb(), 'Sam', checkin(), noon(0));
+  db = addCheckin(db, 'Sam', checkin(), noon(0) + 3600000);
+  assert.equal(streak(db.workers[0], noon(0)), 1);
+});
+
+test('todaySummary: who checked in today, soreness flags, seven-day participation', () => {
+  let db = addCheckin(emptyDb(), 'Ana', checkin(), noon(0));
+  db = addCheckin(db, 'Ben', checkin('shoulders'), noon(0));
+  db = addCheckin(db, 'Cal', checkin(), noon(-2));
+  db = addSession(db, 'Dee', session(80), noon(-5)); // certified, never checked in
+  const s = todaySummary(db, noon(0) + 3600000);
+  assert.equal(s.total, 4);
+  assert.equal(s.checkedIn, 2);
+  assert.deepEqual(s.soreness, [{ name: 'Ben', area: 'shoulders' }]);
+  assert.equal(s.participation7d, 75); // Ana, Ben, Cal of four
+  assert.equal(todaySummary(emptyDb(), noon(0)).participation7d, 0);
+});
+
+test('the business pack defaults to warehouse and survives a round trip', () => {
+  assert.equal(emptyDb().pack, 'warehouse');
+  const mem = new Map();
+  const storage = { getItem: (k) => mem.get(k) ?? null, setItem: (k, v) => mem.set(k, v) };
+  save({ ...emptyDb(), pack: 'retail' }, storage);
+  assert.equal(load(storage).pack, 'retail');
+  for (const k of mem.keys()) mem.set(k, JSON.stringify({ workers: [], pack: 42 }));
+  assert.equal(load(storage).pack, 'warehouse');
+});
