@@ -1,0 +1,26 @@
+/* Employee training record. Also the printed sheet, so print rules live here. */
+.record-head { display: flex; justify-content: space-between; gap: 24px; flex-wrap: wrap; margin: 8px 0 10px; }
+.record-stats { display: flex; gap: 28px; flex-wrap: wrap; }
+.record-stats p { margin: 0; }
+.stat-value.is-text { font-size: 1.05rem; max-width: 22ch; }
+.table-scroll { overflow-x: auto; padding: 0; }
+.record-table { width: 100%; border-collapse: collapse; min-width: 640px; }
+.record-table th, .record-table td { padding: 14px 16px; text-align: left; border-bottom: 1px solid var(--line); }
+.record-table th { font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); font-weight: 600; }
+.record-table tr:last-child td { border-bottom: 0; }
+.record-table td strong { font-size: 1.1rem; }
+.record-cols { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 0 24px; align-items: start; }
+.history .what { display: flex; flex-direction: column; }
+.history .what small { color: var(--muted); }
+.pill-neutral { background: var(--surface-2); color: var(--muted); }
+.print-foot { margin-top: 28px; display: none; }
+
+@media print {
+  :root { --bg: #fff; --surface: #fff; --surface-2: #fff; --line: #bbb; --text: #000; --muted: #444; --ok: #0a6b2b; --warn: #8a5a00; --bad: #a3150c; --accent: #000; }
+  body { background: #fff; color: #000; font-size: 12pt; }
+  .no-print { display: none !important; }
+  .card { border-color: #bbb; break-inside: avoid; }
+  .pill { border: 1px solid currentColor; background: none !important; }
+  .print-foot { display: block; }
+  .wrap { max-width: none; padding: 0; }
+}

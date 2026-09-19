@@ -7,6 +7,9 @@ import { FAULTS } from './engine/scoring.js';
 import { PACKS, DEFAULT_PACK } from './packs.js';
 import { mergeSample, withoutSample } from './sampleData.js';
 import { requireRole, keepAlive, endSession } from './auth.js';
+import {
+  STATE_LABEL, FILTERS, trainingStatus, compliance, alerts, markAlertsRead, searchWorkers, matchesFilter,
+} from './training.js';
 
 const SVG_NS = 'http://www.w3.org/2000/svg';
 const CONFIRM_MS = 4000;
@@ -108,7 +111,7 @@ function renderToday(db, now) {
 function renderTiles(db, now) {
   const s = summary(db, now);
   document.getElementById('tiles').replaceChildren(
-    tile('Workers', String(s.workers)),
+    tile('Team members', String(s.workers)),
     tile('Average latest score', s.average === null ? '—' : String(s.average), s.average === null ? '' : bandClass(s.average)),
     tile('Overdue rechecks', String(s.overdue), s.overdue > 0 ? 'text-bad' : ''),
     tile('Most common issue', FAULTS[s.fault]?.label ?? 'None yet', 'is-text'),
@@ -188,31 +191,100 @@ function actionLink(className, text, page, worker) {
   return link;
 }
 
-function row({ worker, status, due }, now) {
-  const tr = el('tr');
-  const last = latest(worker);
+const TRAINING_PILL = {
+  completed: 'pill-ok', 'due-soon': 'pill-warn', 'due-today': 'pill-warn',
+  overdue: 'pill-bad', retake: 'pill-bad', 'not-started': 'pill-neutral',
+};
 
+// What the manager needs under each pill: the score, and when it next matters.
+function trainingDetail(s) {
+  if (s.id === 'warmup') return s.completedAt === null ? '' : `Last: ${formatDate(s.completedAt)}`;
+  if (s.state === 'not-started') return '';
+  if (s.state === 'retake') return `Scored ${s.score}`;
+  if (s.state === 'overdue') return `Scored ${s.score} · was due ${formatDate(s.dueAt)}`;
+  return `Scored ${s.score} · due ${formatDate(s.dueAt)}`;
+}
+
+function trainingCell(worker, id, db, now) {
+  const status = trainingStatus(worker, id, db, now);
+  const td = el('td');
+  td.append(el('span', `pill ${TRAINING_PILL[status.state]}`, STATE_LABEL[status.state]));
+  const detail = trainingDetail(status);
+  if (detail) td.append(el('span', 'cell-sub', detail));
+  return td;
+}
+
+const recordHref = (worker) => (worker.id
+  ? `record.html?id=${encodeURIComponent(worker.id)}`
+  : `record.html?name=${encodeURIComponent(worker.name)}`);
+
+function row({ worker }, db, now) {
+  const tr = el('tr');
   const name = el('td');
-  name.append(el('span', 'name', worker.name));
+  const link = el('a', 'name', worker.name);
+  link.href = recordHref(worker);
+  name.append(link);
   if (worker.sample === true) name.append(el('span', 'tag', 'Sample'));
 
-  const score = last ? el('td') : dash();
-  if (last) score.append(el('span', `score ${bandClass(last.score)}`, String(last.score)));
-
-  const state = el('td');
-  state.append(el('span', `pill ${STATUS[status].pill}`, STATUS[status].label));
-
+  const pct = compliance(worker, db, now);
   const action = el('td', 'actions');
-  action.append(
-    actionLink('recheck', last ? 'Recheck' : 'Certify', 'check.html', worker),
-    actionLink('warmup-link', 'Warm-up', 'warmup.html', worker),
-  );
+  const open = el('a', 'recheck', 'Open record');
+  open.href = recordHref(worker);
+  open.setAttribute('aria-label', `Open ${worker.name}'s training record`);
+  action.append(open);
 
   tr.append(
-    name, score, trendCell(worker), dateCell(last?.date), dateCell(due), state,
-    streakCell(streak(worker, now)), dateCell(lastWarmup(worker)), action,
+    name, trainingCell(worker, 'liftCert', db, now), trainingCell(worker, 'warmup', db, now),
+    trendCell(worker), streakCell(streak(worker, now)),
+    el('td', pct === 100 ? 'text-ok' : pct >= 50 ? 'text-warn' : 'text-bad', `${pct}%`), action,
   );
   return tr;
+}
+
+// ---------- alerts ----------
+
+const ALERT_ICON = { completed: '✅', retake: '⚠️', overdue: '🔴', 'due-soon': '🟡', soreness: '🩹' };
+const MAX_ALERTS = 8;
+
+function ago(at, now) {
+  const mins = Math.round((now - at) / 60000);
+  if (mins < 1) return 'just now';
+  if (mins < 60) return `${mins} min ago`;
+  if (mins < 60 * 24) return `${Math.round(mins / 60)} h ago`;
+  return formatDate(at);
+}
+
+function renderAlerts(db, now) {
+  const list = alerts({ ...db, workers: tracked(db) }, now);
+  const seen = db.alertsSeenAt ?? 0;
+  const unread = list.filter((a) => a.at > seen).length;
+  document.getElementById('alerts').hidden = list.length === 0;
+  document.getElementById('alertCount').hidden = unread === 0;
+  document.getElementById('alertCount').textContent = String(unread);
+  document.getElementById('markRead').hidden = unread === 0;
+  document.getElementById('alertList').replaceChildren(...list.slice(0, MAX_ALERTS).map((a) => {
+    const li = el('li', a.at > seen ? 'unread' : '');
+    const worker = db.workers.find((w) => w.name === a.worker);
+    const link = el('a', '', a.text);
+    if (worker) link.href = recordHref(worker);
+    const time = el('time', '', ago(a.at, now));
+    li.append(el('span', 'icon', ALERT_ICON[a.type]), link, time);
+    return li;
+  }));
+}
+
+// ---------- search and filters ----------
+
+const view = { query: '', filter: 'all' };
+
+function renderFilters() {
+  document.getElementById('filters').replaceChildren(...FILTERS.map(([id, label]) => {
+    const chip = el('button', 'chip', label);
+    chip.type = 'button';
+    chip.setAttribute('aria-pressed', String(view.filter === id));
+    chip.addEventListener('click', () => { view.filter = id; render(); });
+    return chip;
+  }));
 }
 
 function render() {
@@ -227,7 +299,16 @@ function render() {
   document.getElementById('pack').value = db.pack in PACKS ? db.pack : DEFAULT_PACK;
   renderToday(db, now);
   renderTiles(db, now);
-  document.getElementById('rows').replaceChildren(...rows.map((r) => row(r, now)));
+  const names = new Set(searchWorkers(rows.map((r) => r.worker), view.query)
+    .filter((w) => matchesFilter(w, view.filter, db, now)).map((w) => w.name));
+  const shown = rows.filter((r) => names.has(r.worker.name));
+  document.getElementById('rows').replaceChildren(...shown.map((r) => row(r, db, now)));
+  document.getElementById('noMatch').hidden = shown.length > 0 || isEmpty;
+  document.getElementById('noMatch').textContent = view.query.trim()
+    ? `No team member matches "${view.query.trim()}"${view.filter === 'all' ? '' : ' with that filter'}.`
+    : 'No team member matches that filter.';
+  renderFilters();
+  renderAlerts(db, now);
   document.getElementById('today').hidden = isEmpty;
   document.getElementById('empty').hidden = !isEmpty;
   document.getElementById('records').hidden = isEmpty;
@@ -261,7 +342,11 @@ function clearAll() {
   }
   if (Date.now() - armedAt < DOUBLE_CLICK_MS) return false;
   disarm();
-  save({ ...emptyDb(), intervalDays: load().intervalDays ?? emptyDb().intervalDays });
+  // Records go; the business, its settings and the real roster (with PINs) stay.
+  const db = load();
+  const roster = db.workers.filter((w) => typeof w.id === 'string' && w.sample !== true)
+    .map((w) => ({ ...w, sessions: [], checkins: [] }));
+  save({ ...db, workers: roster, alertsSeenAt: 0 });
   return true;
 }
 
@@ -269,6 +354,7 @@ const ACTIONS = {
   'load-sample': () => { save(mergeSample({ ...emptyDb(), ...load() }, Date.now())); return true; },
   'clear-sample': () => { save(withoutSample({ ...emptyDb(), ...load() })); return true; },
   'clear-all': clearAll,
+  'mark-read': () => { save(markAlertsRead(load(), Date.now())); return true; },
 };
 
 function initPack() {
@@ -290,6 +376,7 @@ function initPack() {
 
 function init() {
   initPack();
+  document.getElementById('search').addEventListener('input', (e) => { view.query = e.target.value; render(); });
   document.addEventListener('click', (e) => {
     const action = e.target.closest('[data-action]')?.dataset.action;
     if (!action) return;

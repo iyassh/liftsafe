@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Training record · LiftSafe</title>
+  <link rel="icon" href="data:,">
+  <link rel="stylesheet" href="css/base.css">
+  <link rel="stylesheet" href="css/app.css">
+  <link rel="stylesheet" href="css/record.css">
+</head>
+<body>
+  <div class="wrap">
+    <header class="topbar no-print">
+      <a class="brand" href="app.html">Lift<span>Safe</span></a>
+      <span class="badge">🔒 Video never leaves this device</span>
+    </header>
+
+    <nav class="subnav no-print" aria-label="Manager">
+      <a href="dashboard.html">← Dashboard</a>
+      <a href="team.html">Team &amp; settings</a>
+      <span class="spacer"></span>
+      <button class="btn btn-ghost" type="button" id="printBtn">Print record</button>
+    </nav>
+
+    <main id="record" hidden>
+      <header class="record-head">
+        <div>
+          <p class="eyebrow" id="bizTitle"></p>
+          <h1 id="name"></h1>
+          <p class="muted" id="subtitle"></p>
+        </div>
+        <div class="record-stats">
+          <div><p class="stat-label muted">Training compliance</p><p class="stat-value" id="compliance"></p></div>
+          <div><p class="stat-label muted">Warm-up streak</p><p class="stat-value" id="streak"></p></div>
+          <div><p class="stat-label muted">Most common issue</p><p class="stat-value is-text" id="topFault"></p></div>
+        </div>
+      </header>
+
+      <h2>Training</h2>
+      <section class="card table-scroll">
+        <table class="record-table">
+          <thead><tr><th>Training</th><th>Status</th><th>Last score</th><th>Attempts</th><th>Last completed</th><th>Next due</th></tr></thead>
+          <tbody id="trainingRows"></tbody>
+        </table>
+      </section>
+
+      <div class="record-cols">
+        <div>
+          <h2>Upcoming</h2>
+          <section class="card"><ul class="history" id="upcoming"></ul><p class="muted" id="noUpcoming" hidden>Nothing scheduled until a first attempt is made.</p></section>
+
+          <h2>Soreness reports</h2>
+          <section class="card"><ul class="history" id="soreness"></ul><p class="muted" id="noSoreness" hidden>None reported.</p></section>
+        </div>
+        <div>
+          <h2>History</h2>
+          <section class="card"><ul class="history" id="history"></ul><p class="muted" id="noHistory" hidden>No attempts yet.</p></section>
+        </div>
+      </div>
+
+      <p class="muted small print-foot" id="printFoot"></p>
+    </main>
+
+    <main id="missing" class="card" hidden>
+      <h1>Team member not found</h1>
+      <p class="muted">They may have been removed from the team.</p>
+      <a class="btn" href="dashboard.html">Back to the dashboard</a>
+    </main>
+  </div>
+  <script type="module" src="js/record.js"></script>
+</body>
+</html>

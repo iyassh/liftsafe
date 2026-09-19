@@ -204,3 +204,13 @@ test('the demo manager PIN opens the demo business, and the worker PIN does not'
   assert.equal(await checkPin(DEMO_PINS.worker, DEMO_BUSINESS.managerPin), false);
   assert.equal(DEMO_BUSINESS.demo, true);
 });
+
+// The demo has to show every training state, or a filter chip comes up empty in front of a customer.
+import { trainingStatus } from '../js/training.js';
+
+test('the demo business shows every lift certification state', () => {
+  const now = new Date(2026, 8, 19, 11).getTime();
+  const db = mergeSample(emptyDb(), now);
+  const states = new Set(db.workers.map((w) => trainingStatus(w, 'liftCert', db, now).state));
+  assert.deepEqual(states, new Set(['completed', 'due-soon', 'overdue', 'retake', 'not-started']));
+});

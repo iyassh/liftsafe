@@ -47,17 +47,26 @@
         <a class="btn" href="check.html">Start a lift check</a>
       </div>
 
+      <section class="card alerts" id="alerts" aria-labelledby="alerts-title" hidden>
+        <div class="alerts-head">
+          <h2 id="alerts-title">Alerts <span class="count" id="alertCount" hidden></span></h2>
+          <button class="btn btn-ghost btn-small" type="button" data-action="mark-read" id="markRead">Mark all read</button>
+        </div>
+        <ul class="alert-list" id="alertList"></ul>
+        <p class="muted small">Alerts show on this device. Email and text alerts come with cloud accounts.</p>
+      </section>
+
       <section class="today" id="today" aria-labelledby="today-title" hidden>
         <div class="section-head">
           <h2 id="today-title">Today's shift start</h2>
           <p class="muted" id="today-date"></p>
         </div>
         <div class="tiles" id="today-tiles"></div>
-        <p class="muted section-note">Soreness is self-reported so you can check in with the worker. It never blocks anyone from working.</p>
+        <p class="muted section-note">Soreness is self-reported so you can check in with them. It never blocks anyone from working.</p>
       </section>
 
       <div class="section-head">
-        <h2 id="cert-title">Lift certification</h2>
+        <h2 id="cert-title">Team training</h2>
       </div>
       <section class="tiles" id="tiles" aria-labelledby="cert-title"></section>
 
@@ -75,18 +84,21 @@
         <p class="sample-note muted" id="sample-note" hidden>
           Rows tagged <span class="tag">Sample</span> are made-up demo data, not real training records.
         </p>
+        <div class="find">
+          <input type="text" id="search" placeholder="Search team members by name" autocomplete="off" aria-label="Search team members by name">
+          <div class="chips" id="filters" role="group" aria-label="Filter by training status"></div>
+        </div>
+        <p class="muted no-match" id="noMatch" hidden>No team member matches that search.</p>
         <div class="table-scroll">
           <table>
             <thead>
               <tr>
-                <th scope="col">Worker</th>
-                <th scope="col">Latest score</th>
-                <th scope="col">Trend</th>
-                <th scope="col">Last check</th>
-                <th scope="col">Next recheck</th>
-                <th scope="col">Status</th>
+                <th scope="col">Team member</th>
+                <th scope="col">Lift Safety Certification</th>
+                <th scope="col">Pre-shift Warm-up</th>
+                <th scope="col">Score trend</th>
                 <th scope="col">Streak</th>
-                <th scope="col">Last warm-up</th>
+                <th scope="col">Compliance</th>
                 <th scope="col"><span class="sr-only">Action</span></th>
               </tr>
             </thead>

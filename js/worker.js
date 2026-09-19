@@ -1,12 +1,10 @@
 // Worker home: what a signed-in worker sees between the PIN pad and the camera.
 // Shows only their own records.
-import { load, findWorker, checkinsOf, streak, latest, nextDue, workerStatus } from './store.js';
+import { load, findWorker, checkinsOf, streak, latest } from './store.js';
+import { TRAININGS, STATE_LABEL, allStatuses } from './training.js';
 import { requireRole, endSession, keepAlive } from './auth.js';
 import { FAULTS } from './engine/scoring.js';
-import { PACKS, DEFAULT_PACK } from './packs.js';
-import { MOVEMENTS } from './engine/movements.js';
 
-const DAY = 86400000;
 const $ = (id) => document.getElementById(id);
 const band = (score) => (score >= 70 ? 'text-ok' : score >= 50 ? 'text-warn' : 'text-bad');
 const formatDate = (ms) => new Date(ms).toLocaleDateString([], { day: 'numeric', month: 'short', year: 'numeric' });
@@ -22,20 +20,46 @@ function signOut() {
   location.replace('app.html');
 }
 
-function renderCert(worker, db, now) {
-  const status = workerStatus(worker, now, db.intervalDays);
-  const due = nextDue(worker, db.intervalDays);
-  const daysLeft = due === null ? null : Math.ceil((due - now) / DAY);
-  const view = {
-    uncertified: ['Not certified yet', 'text-warn', 'Do a lift check to get certified.'],
-    current: ['Certified', 'text-ok', `Until ${due === null ? '' : formatDate(due)}`],
-    'due-soon': [`Due in ${daysLeft} ${daysLeft === 1 ? 'day' : 'days'}`, 'text-warn', 'Time for your lift check.'],
-    overdue: ['Overdue', 'text-bad', `Was due ${due === null ? '' : formatDate(due)}`],
-  }[status];
-  $('certStatus').textContent = view[0];
-  $('certStatus').className = `stat-value ${view[1]}`;
-  $('certDetail').textContent = view[2];
-  $('liftSub').textContent = status === 'current' ? 'Practise any time' : 'Five lifts, about 2 minutes';
+const PILL = {
+  completed: 'pill-ok', 'due-soon': 'pill-warn', 'due-today': 'pill-warn',
+  overdue: 'pill-bad', retake: 'pill-bad', 'not-started': 'pill-neutral',
+};
+
+function courseDetail(s) {
+  if (s.id === 'warmup') return s.state === 'completed' ? 'Done for today. Back tomorrow.' : 'Every shift · about 3 minutes';
+  if (s.state === 'not-started') return 'Five lifts · about 2 minutes';
+  if (s.state === 'retake') return `You scored ${s.score}. ${TRAININGS.liftCert.passMark} passes. Have another go.`;
+  if (s.state === 'overdue') return `Scored ${s.score} · was due ${formatDate(s.dueAt)}`;
+  return `Scored ${s.score} · valid until ${formatDate(s.dueAt)}`;
+}
+
+// One card per training, like a course list: where I stand, my score, and a way in.
+function renderCourses(statuses) {
+  $('courses').replaceChildren(...statuses.map((s) => {
+    const t = TRAININGS[s.id];
+    const needsDoing = !['completed', 'due-soon'].includes(s.state);
+    const card = document.createElement('article');
+    card.className = 'card course';
+    const head = document.createElement('div');
+    head.className = 'course-head';
+    const title = document.createElement('h3');
+    title.textContent = t.name;
+    const pill = document.createElement('span');
+    pill.className = `pill ${PILL[s.state]}`;
+    pill.textContent = STATE_LABEL[s.state];
+    head.append(title, pill);
+    const blurb = document.createElement('p');
+    blurb.className = 'muted';
+    blurb.textContent = t.blurb;
+    const detail = document.createElement('p');
+    detail.textContent = courseDetail(s);
+    const start = document.createElement('a');
+    start.className = needsDoing ? 'btn' : 'btn btn-ghost';
+    start.href = t.page;
+    start.textContent = s.state === 'not-started' ? 'Start' : s.state === 'retake' ? 'Retake' : needsDoing ? 'Start' : 'Practise again';
+    card.append(head, blurb, detail, start);
+    return card;
+  }));
 }
 
 function renderHistory(worker) {
@@ -68,15 +92,18 @@ function render(session) {
   const now = Date.now();
   const doneToday = checkinsOf(worker).some((c) => sameDay(c.date, now));
   const run = streak(worker, now);
-  const pack = PACKS[db.pack] ?? PACKS[DEFAULT_PACK];
 
   $('bizTitle').textContent = db.business?.name ?? '';
   $('greeting').textContent = `${greeting(now)}, ${worker.name.split(' ')[0]}`;
   $('todayStatus').textContent = doneToday ? '✓ Shift-ready' : 'Warm-up to do';
   $('todayStatus').className = `stat-value ${doneToday ? 'text-ok' : 'text-warn'}`;
   $('streakValue').textContent = run ? `🔥 ${run} ${run === 1 ? 'shift' : 'shifts'}` : 'Starts today';
-  $('warmupSub').textContent = doneToday ? 'Done today. Go again if you like.' : pack.warmup.map((id) => MOVEMENTS[id].name).join(' · ');
-  renderCert(worker, db, now);
+  const statuses = allStatuses(worker, db, now);
+  const done = statuses.filter((st) => ['completed', 'due-soon'].includes(st.state)).length;
+  $('progress').textContent = `${done} of ${statuses.length} complete`;
+  $('progress').className = `stat-value ${done === statuses.length ? 'text-ok' : 'text-warn'}`;
+  $('progressDetail').textContent = done === statuses.length ? 'You are up to date.' : 'See what is left below.';
+  renderCourses(statuses);
   renderTip(worker);
   renderHistory(worker);
   $('worker').hidden = false;

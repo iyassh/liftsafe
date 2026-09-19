@@ -27,13 +27,11 @@
       <section class="status-grid" aria-label="Your status">
         <div class="card"><p class="stat-label muted">Today</p><p class="stat-value" id="todayStatus"></p></div>
         <div class="card"><p class="stat-label muted">Streak</p><p class="stat-value" id="streakValue"></p></div>
-        <div class="card"><p class="stat-label muted">Lift certification</p><p class="stat-value" id="certStatus"></p><p class="muted small" id="certDetail"></p></div>
+        <div class="card"><p class="stat-label muted">My training</p><p class="stat-value" id="progress"></p><p class="muted small" id="progressDetail"></p></div>
       </section>
 
-      <section class="actions">
-        <a class="btn btn-big" id="warmupBtn" href="warmup.html">Start warm-up<small id="warmupSub"></small></a>
-        <a class="btn btn-ghost btn-big" id="liftBtn" href="check.html">Lift check<small id="liftSub"></small></a>
-      </section>
+      <h2>My training</h2>
+      <section class="courses" id="courses"></section>
 
       <section class="card tip" id="tipCard" hidden>
         <p class="stat-label muted">Your focus</p>
@@ -41,7 +39,7 @@
         <p id="tipText"></p>
       </section>
 
-      <h2>Your lift checks</h2>
+      <h2>My scores</h2>
       <section class="card">
         <ul class="history" id="history"></ul>
         <p class="muted" id="noHistory" hidden>No lift checks yet. Your first one sets your certification.</p>

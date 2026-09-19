@@ -91,7 +91,7 @@ export function sampleWorkers(now) {
     ], checkins(now, weekdayRun(now))),
     worker('Tavita Moana', [
       session(now, 210, 61, 'stoop'),
-      session(now, 104, 66, 'stoop'),
+      session(now, 104, 76, 'stoop'),
     ], checkins(now, [9, 10])),
     worker('Ingrid Solheimdottir', [
       session(now, 172, 68, 'trunk'),

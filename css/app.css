@@ -89,3 +89,12 @@ h2 { font-size: 1.25rem; margin: 28px 0 10px; }
 .roster li:last-child { border-bottom: 0; }
 .roster .who { flex: 1 1 160px; font-weight: 700; }
 .saved-note { margin: 12px 0 0; font-weight: 600; }
+
+/* ---------- my training (course cards) ---------- */
+.courses { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 14px; margin-bottom: 8px; }
+.course { display: flex; flex-direction: column; gap: 8px; }
+.course p { margin: 0; }
+.course .btn { margin-top: 10px; align-self: flex-start; }
+.course-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; }
+.course-head h3 { margin: 0; font-size: 1.3rem; line-height: 1.2; }
+.pill-neutral { background: var(--surface-2); color: var(--muted); }

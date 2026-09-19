@@ -5,6 +5,7 @@ import { load, save, setBusiness, addWorker, checkinsOf, streak } from './store.
 import { validPin, makePin, checkPin, startSession, endSession } from './auth.js';
 import { PACKS, DEFAULT_PACK } from './packs.js';
 import { mergeSample, DEMO_BUSINESS, DEMO_PINS } from './sampleData.js';
+import { unreadCount } from './training.js';
 
 const MAX_TRIES = 5;
 const LOCK_MS = 30_000;
@@ -52,8 +53,8 @@ function renderDraftTeam() {
 async function addDraftWorker() {
   const name = $('newName').value.trim();
   const pin = $('newPin').value;
-  if (!name) return showSetupError('Enter the worker\'s name.');
-  if (!validPin(pin)) return showSetupError('A worker PIN is 4 digits.');
+  if (!name) return showSetupError('Enter their name.');
+  if (!validPin(pin)) return showSetupError('A PIN is 4 digits.');
   if (draftTeam.some((w) => w.name.toLowerCase() === name.toLowerCase())) return showSetupError(`${name} is already on the list.`);
   draftTeam.push({ id: newId(), name, pin: await makePin(pin) });
   $('newName').value = '';
@@ -70,7 +71,7 @@ async function finishSetup(e) {
   if (!name) return showSetupError('Enter your business name.');
   if (!validPin(managerPin)) return showSetupError('The manager PIN is 4 digits.');
   if ($('newName').value.trim()) await addDraftWorker();
-  if (!draftTeam.length) return showSetupError('Add at least one worker.');
+  if (!draftTeam.length) return showSetupError('Add at least one team member.');
   try {
     let db = setBusiness({ ...load(), pack: $('bizPack').value }, { name, managerPin: await makePin(managerPin) });
     for (const w of draftTeam) db = addWorker(db, w);
@@ -132,8 +133,11 @@ function renderKiosk() {
   $('bizTitle').textContent = db.business.name;
   $('workerTiles').replaceChildren(...roster.map((w) => workerTile(w, now)));
   $('noWorkers').hidden = roster.length > 0;
+  // A count only, never the alerts themselves: anyone can see the kiosk.
+  const unread = unreadCount(db, now);
+  $('managerBtn').textContent = unread ? `Manager · ${unread} new` : 'Manager';
   $('demoNote').hidden = db.business.demo !== true;
-  $('demoNote').textContent = `Demo business. Every worker's PIN is ${DEMO_PINS.worker}; the manager PIN is ${DEMO_PINS.manager}.`;
+  $('demoNote').textContent = `Demo business. Every team member's PIN is ${DEMO_PINS.worker}; the manager PIN is ${DEMO_PINS.manager}.`;
   show('kiosk');
 }
 

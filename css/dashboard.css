@@ -81,3 +81,30 @@ tbody tr:hover { background: var(--surface-2); }
   position: absolute; width: 1px; height: 1px; overflow: hidden;
   clip-path: inset(50%); white-space: nowrap;
 }
+
+/* ---------- alerts ---------- */
+.alerts { margin-bottom: 26px; }
+.alerts-head { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; }
+.alerts-head h2 { margin: 0; }
+.count { display: inline-block; min-width: 1.6em; padding: 1px 8px; margin-left: 6px; border-radius: 999px; background: var(--bad); color: #fff; font-size: 0.85rem; text-align: center; vertical-align: middle; }
+.alert-list { list-style: none; margin: 14px 0 10px; padding: 0; }
+.alert-list li { display: flex; gap: 12px; align-items: baseline; padding: 10px 0; border-bottom: 1px solid var(--line); }
+.alert-list li:last-child { border-bottom: 0; }
+.alert-list .icon { flex: 0 0 1.4em; }
+.alert-list a { flex: 1; text-decoration: none; }
+.alert-list a:hover { text-decoration: underline; }
+.alert-list time { color: var(--muted); font-size: 0.85rem; white-space: nowrap; }
+.alert-list li.unread a { font-weight: 700; }
+.alert-list li.unread::before { content: ''; flex: 0 0 8px; height: 8px; border-radius: 50%; background: var(--accent); align-self: center; }
+
+/* ---------- search and filters ---------- */
+.find { display: flex; gap: 14px; flex-wrap: wrap; align-items: center; padding: 16px; border-bottom: 1px solid var(--line); }
+.find input { flex: 1 1 260px; font-size: 1.05rem; padding: 12px 14px; }
+.chips { display: flex; gap: 8px; flex-wrap: wrap; }
+.chip { padding: 6px 14px; border-radius: 999px; border: 1px solid var(--line); background: transparent; color: var(--muted); font: inherit; font-size: 0.9rem; cursor: pointer; }
+.chip:hover { color: var(--text); }
+.chip[aria-pressed='true'] { background: var(--accent); border-color: var(--accent); color: #111; font-weight: 700; }
+.no-match { padding: 18px 16px; margin: 0; }
+td .cell-sub { display: block; color: var(--muted); font-size: 0.8rem; margin-top: 3px; }
+td a.name { text-decoration: none; }
+td a.name:hover { text-decoration: underline; }
