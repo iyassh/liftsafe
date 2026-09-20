@@ -14,6 +14,13 @@ export const DEMOS = {
   fast: { wrong: { ...GOOD, speed: 3 }, focus: 'hip', wrongLabel: 'Too fast', rightLabel: 'Slow and smooth' },
 };
 
+// The warm-up movements, demonstrated the same way. `hold` stays at the top for two beats.
+export const MOVES = {
+  overheadReach: { shin: 0, thigh: 0, trunk: 0, arm: 176, speed: 1, box: false, hold: true, focus: 'hand' },
+  squat: { shin: 26, thigh: -82, trunk: 34, arm: 72, speed: 1, box: false, focus: 'knee' },
+  hipHinge: { shin: 6, thigh: -14, trunk: 62, arm: 8, speed: 1, box: false, focus: 'hip' },
+};
+
 const lerp = (a, b, t) => a + (b - a) * t;
 const ease = (t) => t * t * (3 - 2 * t);
 
@@ -35,8 +42,8 @@ export function drawFigure(ctx, w, h, pose, focus, color, time) {
   const cycle = (time * pose.speed) % (PHASE_MS * 4);
   const phase = Math.floor(cycle / PHASE_MS);
   const p = ease((cycle % PHASE_MS) / PHASE_MS);
-  const t = phase % 2 === 0 ? p : 1 - p;
-  const holding = phase === 1 || phase === 2;
+  const t = pose.hold ? [p, 1, 1, 1 - p][phase] : phase % 2 === 0 ? p : 1 - p;
+  const holding = pose.box !== false && (phase === 1 || phase === 2);
 
   const scale = h * 0.74;
   const origin = { x: w * 0.4, y: h * 0.88 };
@@ -55,8 +62,8 @@ export function drawFigure(ctx, w, h, pose, focus, color, time) {
   ctx.beginPath(); ctx.moveTo(w * 0.08, origin.y + 3); ctx.lineTo(w * 0.92, origin.y + 3); ctx.stroke();
   ctx.setLineDash([]);
 
-  // box: on the floor, or in the hands
-  const size = scale * 0.17;
+  // box: on the floor, or in the hands (the warm-up movements have none)
+  const size = pose.box === false ? 0 : scale * 0.17;
   const [bx, by] = at(holding ? j.hand : { x: rest.x, y: -size / scale });
   const top = holding ? by - size * 0.15 : origin.y - size;
   ctx.fillStyle = 'rgba(255,204,0,0.18)';
@@ -101,6 +108,24 @@ export function playDemo(fault, wrongCanvas, rightCanvas) {
   const frame = (now) => {
     drawFigure(wrongCanvas.getContext('2d'), wrongCanvas.width, wrongCanvas.height, demo.wrong, demo.focus, '#ff3b30', now - start);
     drawFigure(rightCanvas.getContext('2d'), rightCanvas.width, rightCanvas.height, GOOD, demo.focus, '#34c759', now - start);
+    raf = requestAnimationFrame(frame);
+  };
+  raf = requestAnimationFrame(frame);
+  return () => cancelAnimationFrame(raf);
+}
+
+// Loops one warm-up movement on a canvas. Returns a function that stops it.
+export function playMovement(id, canvas) {
+  const pose = MOVES[id];
+  if (!pose) return () => {};
+  let raf = 0;
+  const start = performance.now();
+  const ratio = window.devicePixelRatio || 1;
+  const { width, height } = canvas.getBoundingClientRect();
+  canvas.width = Math.max(1, Math.round(width * ratio));
+  canvas.height = Math.max(1, Math.round(height * ratio));
+  const frame = (now) => {
+    drawFigure(canvas.getContext('2d'), canvas.width, canvas.height, pose, pose.focus, '#34c759', now - start);
     raf = requestAnimationFrame(frame);
   };
   raf = requestAnimationFrame(frame);

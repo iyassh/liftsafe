@@ -6,6 +6,7 @@ import { PACKS, DEFAULT_PACK } from './packs.js';
 import { devLog, devFlag } from './devLog.js';
 import { load, save, addCheckin, streak } from './store.js';
 import { currentSession, touchSession } from './auth.js';
+import { playMovement } from './demoFigure.js';
 
 const READY_HOLD_MS = 1500; // position must be good this long before the first movement
 const READY_SHOW_MS = 700; // how long "✓ Ready" stays up
@@ -74,7 +75,11 @@ window.__liftsafe = {
 
 function go(screen) {
   const leavingCamera = screen === 'done' || screen === 'name';
-  if (leavingCamera) stopCamera();
+  if (leavingCamera) {
+    stopCamera();
+    setImmersive(false);
+    stopMoveDemo();
+  }
   clearTimeout(state.nextTimer);
   state.screen = screen;
   devLog.event('screen', { screen, movement: screen === 'movement' ? currentSpec().id : undefined });
@@ -85,6 +90,37 @@ function go(screen) {
 
   if (screen === 'positioning') resetRun();
   if (screen === 'done') renderDone();
+}
+
+// ---------- extras: demonstration figure and full screen ----------
+// Both are wrapped: if either fails on some device, the warm-up still runs.
+
+let stopDemo = null;
+
+function stopMoveDemo() {
+  try { stopDemo?.(); } catch { /* nothing to stop */ }
+  stopDemo = null;
+}
+
+function showMoveDemo(id) {
+  stopMoveDemo();
+  // After layout, so the canvas knows its size.
+  requestAnimationFrame(() => {
+    try { stopDemo = playMovement(id, document.getElementById('moveDemo')); } catch (err) { console.warn('LiftSafe: demo figure unavailable', err); }
+  });
+}
+
+function setImmersive(on) {
+  try {
+    const btn = document.getElementById('fullBtn');
+    document.body.classList.toggle('immersive', on);
+    btn.setAttribute('aria-pressed', String(on));
+    btn.textContent = on ? '✕ Exit full screen' : '⛶ Full screen';
+    if (on && !document.fullscreenElement) document.documentElement.requestFullscreen?.().catch(() => {});
+    if (!on && document.fullscreenElement) document.exitFullscreen?.().catch(() => {});
+  } catch (err) {
+    console.warn('LiftSafe: full screen unavailable', err);
+  }
 }
 
 function resetRun() {
@@ -338,6 +374,7 @@ function startMovement(index) {
     go('done');
     return;
   }
+  showMoveDemo(movementIds[index]);
   state.index = index;
   state.tracker = new MovementTracker(currentSpec());
   state.movementStartedAt = performance.now();
@@ -510,6 +547,8 @@ el.sorenessOptions.addEventListener('click', (e) => {
 el.skipBtn.addEventListener('click', skipMovement);
 el.voiceBtn.addEventListener('click', toggleVoice);
 el.retrySaveBtn.addEventListener('click', saveCheckin);
+document.getElementById('fullBtn').addEventListener('click', () => setImmersive(!document.body.classList.contains('immersive')));
+document.addEventListener('fullscreenchange', () => { if (!document.fullscreenElement) setImmersive(false); });
 
 el.debug.hidden = !debugOn;
 renderPackLine();

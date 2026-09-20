@@ -24,6 +24,7 @@
         <video id="cam" autoplay playsinline muted></video>
         <canvas id="overlay"></canvas>
         <p class="stage-msg" id="stageMsg" role="status" aria-live="polite" hidden></p>
+        <button type="button" class="full-btn" id="fullBtn" aria-pressed="false">⛶ Full screen</button>
       </div>
 
       <section class="screen screen-name card" id="screen-name">
@@ -67,6 +68,7 @@
         <p class="panel-eyebrow" id="moveStep">Movement 1 of 3</p>
         <h2 id="moveName"></h2>
         <p class="move-instruction" id="moveInstruction"></p>
+        <canvas class="move-demo" id="moveDemo" aria-hidden="true"></canvas>
         <div class="move-progress" id="repsProgress">
           <p class="move-count" id="repCount">0 / 5</p>
           <div class="dots" id="dots" aria-hidden="true"></div>

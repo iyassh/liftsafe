@@ -99,3 +99,7 @@
   .soreness-options { grid-template-columns: minmax(0, 1fr); gap: 10px; }
   .soreness-options .btn { padding: 16px 20px; }
 }
+
+/* Looping demonstration of the current movement. */
+.move-demo { display: block; width: 100%; aspect-ratio: 4 / 3; max-height: 220px; margin: 10px 0; border-radius: var(--radius); border: 1px solid var(--line); background: var(--surface-2); }
+body.immersive .move-demo { max-height: 160px; }
