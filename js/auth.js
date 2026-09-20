@@ -27,8 +27,10 @@ export async function checkPin(pin, record) {
   return (await hashPin(pin, record.salt)) === record.hash;
 }
 
-export function startSession(role, worker, now, storage = sessionStorage) {
-  const session = { role, expires: now + SESSION_MS[role] };
+// `ttl` overrides the idle time, for a demo that must not sign out mid-presentation.
+export function startSession(role, worker, now, storage = sessionStorage, ttl = null) {
+  const session = { role, expires: now + (ttl ?? SESSION_MS[role]) };
+  if (ttl) session.ttl = ttl;
   if (role === 'worker') Object.assign(session, { workerId: worker.id, name: worker.name });
   storage.setItem(KEY, JSON.stringify(session));
 }
@@ -38,9 +40,10 @@ export function currentSession(now, storage = sessionStorage) {
     const s = JSON.parse(storage.getItem(KEY));
     const ok = s && ROLES.includes(s.role) && Number.isFinite(s.expires) && s.expires > now;
     if (!ok) return null;
-    return s.role === 'worker'
+    const base = s.role === 'worker'
       ? { role: s.role, workerId: s.workerId, name: s.name, expires: s.expires }
       : { role: s.role, expires: s.expires };
+    return Number.isFinite(s.ttl) ? { ...base, ttl: s.ttl } : base;
   } catch {
     return null;
   }
@@ -49,7 +52,7 @@ export function currentSession(now, storage = sessionStorage) {
 // Activity keeps a live session going; it never revives an expired one.
 export function touchSession(now, storage = sessionStorage) {
   const s = currentSession(now, storage);
-  if (s) storage.setItem(KEY, JSON.stringify({ ...s, expires: now + SESSION_MS[s.role] }));
+  if (s) storage.setItem(KEY, JSON.stringify({ ...s, expires: now + (s.ttl ?? SESSION_MS[s.role]) }));
 }
 
 export function endSession(storage = sessionStorage) {

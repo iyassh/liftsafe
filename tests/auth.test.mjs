@@ -67,3 +67,13 @@ test('endSession signs out, and junk in storage is not a session', () => {
     assert.equal(currentSession(t0, s), null, junk);
   }
 });
+
+test('a demo session can be given a longer life, and activity keeps extending it by that much', () => {
+  const s = memStorage();
+  const ttl = 3 * 60 * 60_000;
+  startSession('manager', null, t0, s, ttl);
+  assert.ok(currentSession(t0 + SESSION_MS.manager + 1, s), 'outlives the normal idle time');
+  touchSession(t0 + 60_000, s);
+  assert.equal(currentSession(t0 + 60_000, s).expires, t0 + 60_000 + ttl);
+  assert.equal(currentSession(t0 + 60_000 + ttl + 1, s), null);
+});

@@ -4,10 +4,11 @@
 import { load, save, setBusiness, addWorker, checkinsOf, streak } from './store.js';
 import { validPin, makePin, checkPin, startSession, endSession } from './auth.js';
 import { PACKS, DEFAULT_PACK } from './packs.js';
-import { mergeSample, DEMO_BUSINESS, DEMO_PINS } from './sampleData.js';
+import { mergeSample, withoutSample, DEMO_BUSINESS, DEMO_PINS } from './sampleData.js';
 import { unreadCount, searchWorkers } from './training.js';
 
 const MAX_TRIES = 5;
+const DEMO_SESSION_MS = 3 * 60 * 60_000; // a demo must not sign out in the middle of a presentation
 const SEARCH_FROM = 4; // two or three tiles need no search box
 const LOCK_MS = 30_000;
 
@@ -99,7 +100,7 @@ async function nextStep(e) {
 async function finishSetup() {
   try {
     const business = { name: $('bizName').value.trim(), managerPin: await makePin($('mgrPin').value) };
-    let db = setBusiness({ ...load(), pack: $('bizPack').value }, business);
+    let db = setBusiness({ ...withoutSample(load()), pack: $('bizPack').value }, business);
     for (const w of draftTeam) db = addWorker(db, w);
     save(db);
   } catch (err) {
@@ -213,7 +214,8 @@ async function submitPin() {
   if (pinState.target !== target) return; // cancelled while hashing
   if (ok) {
     pinState.tries = 0;
-    startSession(target.kind, target.worker ?? null, Date.now());
+    const demo = load().business?.demo === true;
+    startSession(target.kind, target.worker ?? null, Date.now(), sessionStorage, demo ? DEMO_SESSION_MS : null);
     location.href = target.kind === 'manager' ? 'dashboard.html' : 'worker.html';
     return;
   }
@@ -270,13 +272,13 @@ function enterDemo(role) {
   const db = load();
   if (db.business?.demo !== true) return; // could not save; the welcome screen shows why
   if (role === 'manager') {
-    startSession('manager', null, Date.now());
+    startSession('manager', null, Date.now(), sessionStorage, DEMO_SESSION_MS);
     location.replace('dashboard.html');
     return;
   }
   // Bao has a retake and a warm-up due, so their page shows what the product is for.
   const member = db.workers.find((w) => w.id === 'demo-bao-quillfeather') ?? db.workers.find((w) => w.sample);
-  startSession('worker', member, Date.now());
+  startSession('worker', member, Date.now(), sessionStorage, DEMO_SESSION_MS);
   location.replace('worker.html');
 }
 
@@ -292,6 +294,12 @@ tickClock();
 setInterval(tickClock, 15_000);
 addEventListener('pageshow', (e) => { if (e.persisted) { endSession(); renderKiosk(); } });
 const params = new URLSearchParams(location.search);
-if (params.get('manager') === '1' && load().business) openPin({ kind: 'manager' });
-if (params.get('setup') === '1' && !load().business) showStep(1);
+// The demo company is not an account: "Sign in" and "Set up" only ever see a business someone set up.
+const realBusiness = load().business && load().business.demo !== true;
+if (params.get('signin') === '1' && !realBusiness) {
+  $('welcomeLead').textContent = 'No business is set up on this device yet. Set yours up in about a minute, or open the demo.';
+  show('welcome');
+}
+if (params.get('manager') === '1' && (realBusiness || params.get('signin') !== '1') && load().business) openPin({ kind: 'manager' });
+if (params.get('setup') === '1' && !realBusiness) showStep(1);
 if (params.get('demo')) enterDemo(params.get('demo'));
