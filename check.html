@@ -67,9 +67,14 @@
         <p class="session-score" id="sessionScore"></p>
         <p class="verdict"><span class="pill" id="verdict"></span></p>
         <ol class="lift-scores" id="liftScores" aria-label="Score for each lift"></ol>
+        <p class="improved" id="improved" role="status" hidden></p>
         <div class="top-fault" id="topFault">
           <p class="top-fault-label" id="topFaultLabel"></p>
           <p class="top-fault-tip" id="topFaultTip"></p>
+          <div class="coach" id="coach" hidden>
+            <figure><canvas id="demoWrong" aria-hidden="true"></canvas><figcaption class="text-bad" id="demoWrongLabel"></figcaption></figure>
+            <figure><canvas id="demoRight" aria-hidden="true"></canvas><figcaption class="text-ok" id="demoRightLabel"></figcaption></figure>
+          </div>
         </div>
         <div class="measures-wrap">
           <p class="panel-eyebrow">What the camera measured</p>

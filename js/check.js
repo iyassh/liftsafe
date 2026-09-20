@@ -7,6 +7,7 @@ import { devLog, devFlag } from './devLog.js';
 import { load, save, addSession } from './store.js';
 import { currentSession, touchSession } from './auth.js';
 import { speak, voiceOn, setVoice, stopSpeaking } from './voice.js';
+import { DEMOS, playDemo } from './demoFigure.js';
 
 const LIFTS_PER_SESSION = 5;
 const READY_HOLD_MS = 1500; // position must be good this long before scoring starts
@@ -41,6 +42,8 @@ const el = {
   liftScores: $('liftScores'), topFaultLabel: $('topFaultLabel'), topFaultTip: $('topFaultTip'),
   saveBtn: $('saveBtn'), againBtn: $('againBtn'), doneBtn: $('doneBtn'), who: $('who'), saved: $('saved'), savedMsg: $('savedMsg'),
   dashLink: $('dashLink'),
+  improved: $('improved'), coach: $('coach'), demoWrong: $('demoWrong'), demoRight: $('demoRight'),
+  demoWrongLabel: $('demoWrongLabel'), demoRightLabel: $('demoRightLabel'),
   debug: $('debug'), liveStats: $('liveStats'), measures: $('measures'), voiceBtn: $('voiceBtn'),
 };
 const ctx = el.canvas.getContext('2d');
@@ -60,6 +63,8 @@ const state = {
   paused: false,
   tipUntil: 0,
   lastFrameAt: 0,
+  attempts: [], // session scores this visit: test, coach, test again
+  stopDemo: null,
 };
 
 window.__liftsafe = {
@@ -75,6 +80,8 @@ function go(screen) {
   const leavingCamera = screen === 'results' || screen === 'name';
   if (leavingCamera) stopSource();
   state.screen = screen;
+  state.stopDemo?.();
+  state.stopDemo = null;
   devLog.event('screen', { screen });
   for (const s of SCREENS) $(`screen-${s}`).hidden = s !== screen;
   el.stage.hidden = screen === 'name' || screen === 'results';
@@ -376,6 +383,35 @@ function frameLifting(m, problem, now) {
   return live.length ? 'bad' : 'ok';
 }
 
+// Test, coach, test again: show the mistake next to the fix, and on a retake show the change.
+function renderCoaching(summary) {
+  const before = state.attempts[state.attempts.length - 1];
+  state.attempts.push(summary.score);
+  const change = before === undefined ? null : summary.score - before;
+  el.improved.hidden = change === null;
+  if (change !== null) {
+    el.improved.textContent = change > 0 ? `First try ${before}  →  now ${summary.score}   ▲ +${change}`
+      : change < 0 ? `Last try ${before}  →  now ${summary.score}   ▼ ${change}` : `Same as last try: ${summary.score}`;
+    el.improved.className = `improved text-${change > 0 ? 'ok' : change < 0 ? 'bad' : 'warn'}`;
+  }
+
+  const demo = DEMOS[summary.topFault];
+  el.coach.hidden = !demo;
+  if (demo) {
+    el.demoWrongLabel.textContent = `✗ ${demo.wrongLabel}`;
+    el.demoRightLabel.textContent = `✓ ${demo.rightLabel}`;
+    // After layout, so the canvases know their size.
+    requestAnimationFrame(() => { state.stopDemo = playDemo(summary.topFault, el.demoWrong, el.demoRight); });
+    el.againBtn.textContent = 'Watch, then try again';
+  } else {
+    el.againBtn.textContent = 'Try again';
+  }
+
+  const result = `Your lift safety score is ${summary.score}. ${summary.passed ? 'Pass.' : 'Needs coaching.'}`;
+  const progress = change > 0 ? ` Up ${change} from your first try.` : '';
+  speak(`${result}${progress}${demo ? ` ${FAULTS[summary.topFault].tip}` : ''}`);
+}
+
 // The numbers behind a score, rounded for people. Saved with the record.
 const measuresOf = (lift) => ({
   back: Math.round(lift.maxTrunk), knees: Math.round(lift.kneeAtMaxTrunk),
@@ -497,7 +533,7 @@ function renderResults() {
     });
     return tr;
   }));
-  speak(`Your lift safety score is ${summary.score}. ${summary.passed ? 'Pass.' : 'Needs coaching.'}`);
+  renderCoaching(summary);
 
   const fault = summary.topFault ? FAULTS[summary.topFault] : null;
   el.topFaultLabel.textContent = fault ? `Work on: ${fault.label}` : 'Clean technique on every lift.';

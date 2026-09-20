@@ -221,3 +221,10 @@
 .measures th { font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); font-weight: 600; }
 .measures td:last-child { font-weight: 800; }
 .small { font-size: 0.85rem; }
+
+/* ---------- test, coach, test again ---------- */
+.improved { margin: 14px 0 0; font-size: clamp(1.2rem, 2.6vw, 1.7rem); font-weight: 800; white-space: pre-wrap; }
+.coach { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; margin-top: 16px; }
+.coach figure { margin: 0; }
+.coach canvas { display: block; width: 100%; aspect-ratio: 4 / 3; border-radius: var(--radius); border: 1px solid var(--line); background: var(--surface-2); }
+.coach figcaption { margin-top: 8px; font-weight: 700; text-align: center; }
