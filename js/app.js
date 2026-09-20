@@ -261,6 +261,25 @@ function initPinPad() {
   });
 }
 
+// One-click demo from the main page. Only ever skips the PIN for the made-up demo
+// business: a device that holds a real business goes to its normal kiosk instead.
+function enterDemo(role) {
+  const existing = load().business;
+  if (existing && existing.demo !== true) return;
+  loadDemo();
+  const db = load();
+  if (db.business?.demo !== true) return; // could not save; the welcome screen shows why
+  if (role === 'manager') {
+    startSession('manager', null, Date.now());
+    location.replace('dashboard.html');
+    return;
+  }
+  // Bao has a retake and a warm-up due, so their page shows what the product is for.
+  const member = db.workers.find((w) => w.id === 'demo-bao-quillfeather') ?? db.workers.find((w) => w.sample);
+  startSession('worker', member, Date.now());
+  location.replace('worker.html');
+}
+
 // ---------- start ----------
 
 endSession(); // arriving at the kiosk always signs the last person out
@@ -272,4 +291,7 @@ renderKiosk();
 tickClock();
 setInterval(tickClock, 15_000);
 addEventListener('pageshow', (e) => { if (e.persisted) { endSession(); renderKiosk(); } });
-if (new URLSearchParams(location.search).get('manager') === '1' && load().business) openPin({ kind: 'manager' });
+const params = new URLSearchParams(location.search);
+if (params.get('manager') === '1' && load().business) openPin({ kind: 'manager' });
+if (params.get('setup') === '1' && !load().business) showStep(1);
+if (params.get('demo')) enterDemo(params.get('demo'));

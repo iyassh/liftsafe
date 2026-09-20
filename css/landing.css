@@ -154,3 +154,17 @@
   .btn-big { padding: 18px 20px; font-size: 1.2rem; }
   .badge { font-size: 0.78rem; }
 }
+
+/* ---------- demo box and entrances ---------- */
+.demo-box { margin-top: 26px; padding: 20px; border: 1px dashed var(--accent); border-radius: var(--radius); background: color-mix(in srgb, var(--accent) 6%, transparent); }
+.demo-label { margin: 0 0 12px; font-weight: 700; color: var(--accent); letter-spacing: 0.04em; text-transform: uppercase; font-size: 0.85rem; }
+.demo-box .hero-actions { margin: 0; }
+.demo-note { margin: 12px 0 0; font-size: 0.9rem; }
+.entrances { margin: 56px 0 8px; }
+.entrances h2 { font-size: 1.6rem; margin: 0 0 16px; }
+.entrance-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 14px; }
+.entrance { display: flex; flex-direction: column; gap: 8px; text-decoration: none; }
+.entrance:hover, .entrance:focus-visible { border-color: var(--accent); outline: none; }
+.entrance-icon { font-size: 1.8rem; }
+.entrance-title { font-size: 1.3rem; font-weight: 800; }
+.entrance-go { margin-top: 6px; font-weight: 700; color: var(--accent); }
