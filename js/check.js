@@ -6,6 +6,7 @@ import { FAULTS, scoreLift, liveFaults, summariseSession } from './engine/scorin
 import { devLog, devFlag } from './devLog.js';
 import { load, save, addSession } from './store.js';
 import { currentSession, touchSession } from './auth.js';
+import { speak, voiceOn, setVoice, stopSpeaking } from './voice.js';
 
 const LIFTS_PER_SESSION = 5;
 const READY_HOLD_MS = 1500; // position must be good this long before scoring starts
@@ -16,8 +17,14 @@ const FRAME_GAP_MS = 500; // longer than this between frames and the timers star
 const SCREENS = ['name', 'positioning', 'lifting', 'results'];
 const COLOR = { ok: '#34c759', warn: '#ffcc00', bad: '#ff3b30' };
 
-const BONES = [[11, 13], [13, 15], [12, 14], [14, 16], [11, 12], [11, 23], [12, 24], [23, 24],
-  [23, 25], [25, 27], [24, 26], [26, 28]];
+// The whole body the model sees: head, arms and hands, trunk, legs and feet.
+const BONES = [
+  [0, 7], [0, 8], // head
+  [11, 13], [13, 15], [15, 19], [12, 14], [14, 16], [16, 20], // arms and hands
+  [11, 12], [11, 23], [12, 24], [23, 24], // trunk
+  [23, 25], [25, 27], [24, 26], [26, 28], // legs
+  [27, 29], [29, 31], [27, 31], [28, 30], [30, 32], [28, 32], // feet
+];
 const JOINTS = [...new Set(BONES.flat())];
 
 const params = new URLSearchParams(location.search);
@@ -34,7 +41,7 @@ const el = {
   liftScores: $('liftScores'), topFaultLabel: $('topFaultLabel'), topFaultTip: $('topFaultTip'),
   saveBtn: $('saveBtn'), againBtn: $('againBtn'), doneBtn: $('doneBtn'), who: $('who'), saved: $('saved'), savedMsg: $('savedMsg'),
   dashLink: $('dashLink'),
-  debug: $('debug'),
+  debug: $('debug'), liveStats: $('liveStats'), measures: $('measures'), voiceBtn: $('voiceBtn'),
 };
 const ctx = el.canvas.getContext('2d');
 
@@ -75,7 +82,10 @@ function go(screen) {
   setStageMsg(null);
 
   if (screen === 'positioning') resetSession();
-  if (screen === 'lifting') renderPanel();
+  if (screen === 'lifting') {
+    renderPanel();
+    speak('Ready. Pick the box up, stand tall, then put it back down.');
+  }
   if (screen === 'results') renderResults();
 }
 
@@ -315,6 +325,7 @@ function onFrame(lms, now) {
   ctx.clearRect(0, 0, el.canvas.width, el.canvas.height);
   if (lms) drawSkeleton(lms, COLOR[tone]);
   if (debugOn) renderDebug(m, problem);
+  renderLiveStats(m);
   devLog.frame(now, state.screen, state.analyzer?.phase, m, problem, m?.visible ? liveFaults(m) : []);
 }
 
@@ -353,7 +364,7 @@ function frameLifting(m, problem, now) {
   // A lift that ends without a summary was dropped (too short, or a gap in usable frames).
   if (wasLifting && state.analyzer.phase === 'standing' && !lift) devLog.event('lift-dropped');
   if (lift) {
-    const result = scoreLift(lift);
+    const result = { ...scoreLift(lift), measures: measuresOf(lift) };
     devLog.event('lift', { n: state.scored.length + 1, lift, result });
     recordLift(result, now);
   }
@@ -361,7 +372,35 @@ function frameLifting(m, problem, now) {
 
   const live = liveFaults(m);
   setStageMsg(live.length ? FAULTS[live[0]].label : null, 'bad');
+  coachAloud(live[0] ?? null, now);
   return live.length ? 'bad' : 'ok';
+}
+
+// The numbers behind a score, rounded for people. Saved with the record.
+const measuresOf = (lift) => ({
+  back: Math.round(lift.maxTrunk), knees: Math.round(lift.kneeAtMaxTrunk),
+  reach: +lift.maxReach.toFixed(2), seconds: +(lift.durationMs / 1000).toFixed(1),
+});
+
+// Live numbers over the video: proof that the score comes from measurement.
+function renderLiveStats(m) {
+  const show = Boolean(m?.visible) && (state.screen === 'lifting' || state.screen === 'positioning');
+  el.liveStats.hidden = !show;
+  if (show) el.liveStats.textContent = `Back ${Math.round(m.trunkAngle)}°  ·  Knees ${Math.round(m.kneeAngle)}°  ·  Reach ${m.reach.toFixed(1)}`;
+}
+
+// Says a fault once when it appears, not on every frame it persists.
+const COACH_GAP_MS = 3500;
+let lastCoached = { fault: null, at: -Infinity };
+function coachAloud(fault, now) {
+  if (!fault) { lastCoached.fault = null; return; }
+  if (fault === lastCoached.fault || now - lastCoached.at < COACH_GAP_MS) return;
+  lastCoached = { fault, at: now };
+  speak(FAULTS[fault].tip);
+}
+
+function renderVoiceButton() {
+  el.voiceBtn.textContent = voiceOn() ? '🔊 Voice on' : '🔇 Voice off';
 }
 
 function recordLift(result, now) {
@@ -372,6 +411,8 @@ function recordLift(result, now) {
   const first = result.faults[0];
   el.tip.textContent = first ? FAULTS[first].tip : 'Good lift!';
   el.tip.className = `tip text-${first ? 'warn' : 'ok'}`;
+  const left = LIFTS_PER_SESSION - state.scored.length;
+  speak(`${result.score}. ${first ? FAULTS[first].tip : 'Good lift.'}${left > 0 ? ` ${left} to go.` : ''}`);
   if (state.scored.length >= LIFTS_PER_SESSION) go('results');
 }
 
@@ -444,6 +485,19 @@ function renderResults() {
     return li;
   });
   el.liftScores.replaceChildren(...items);
+  el.measures.replaceChildren(...state.scored.map((lift, i) => {
+    const tr = document.createElement('tr');
+    const m = lift.measures;
+    const cells = [`${i + 1}`, `${m.back}°`, `${m.knees}°`, m.reach.toFixed(2), `${m.seconds}s`, String(lift.score)];
+    cells.forEach((text, c) => {
+      const td = document.createElement('td');
+      td.textContent = text;
+      if (c === cells.length - 1) td.className = `text-${band(lift.score)}`;
+      tr.append(td);
+    });
+    return tr;
+  }));
+  speak(`Your lift safety score is ${summary.score}. ${summary.passed ? 'Pass.' : 'Needs coaching.'}`);
 
   const fault = summary.topFault ? FAULTS[summary.topFault] : null;
   el.topFaultLabel.textContent = fault ? `Work on: ${fault.label}` : 'Clean technique on every lift.';
@@ -528,6 +582,9 @@ el.nameForm.addEventListener('submit', (e) => {
 el.retryBtn.addEventListener('click', begin);
 el.saveBtn.addEventListener('click', saveRecord);
 el.againBtn.addEventListener('click', tryAgain);
+el.voiceBtn.addEventListener('click', () => { setVoice(!voiceOn()); renderVoiceButton(); });
+renderVoiceButton();
+addEventListener('pagehide', stopSpeaking);
 el.video.addEventListener('loadedmetadata', syncCanvasSize);
 el.video.addEventListener('resize', syncCanvasSize);
 

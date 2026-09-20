@@ -23,6 +23,7 @@
         <video id="cam" autoplay playsinline muted></video>
         <canvas id="overlay"></canvas>
         <p class="stage-msg" id="stageMsg" role="status" aria-live="polite" hidden></p>
+        <p class="live-stats" id="liveStats" hidden></p>
       </div>
 
       <section class="screen screen-name card" id="screen-name">
@@ -57,6 +58,7 @@
         <p class="last-score" id="lastScore">–</p>
         <p class="tip" id="tip" role="status" aria-live="polite"></p>
         <p class="muted">Pick the box up, stand tall, put it back down.</p>
+        <button type="button" class="btn btn-ghost btn-small" id="voiceBtn"></button>
       </section>
 
       <section class="screen screen-results card" id="screen-results" hidden>
@@ -68,6 +70,11 @@
         <div class="top-fault" id="topFault">
           <p class="top-fault-label" id="topFaultLabel"></p>
           <p class="top-fault-tip" id="topFaultTip"></p>
+        </div>
+        <div class="measures-wrap">
+          <p class="panel-eyebrow">What the camera measured</p>
+          <table class="measures"><thead><tr><th>Lift</th><th>Back lean</th><th>Knee bend</th><th>Reach</th><th>Time</th><th>Score</th></tr></thead><tbody id="measures"></tbody></table>
+          <p class="muted small">Back lean: 0° is upright. Knee bend: 180° is a straight leg. Reach: how far the hands were from the feet, in torso lengths.</p>
         </div>
         <div class="result-actions">
           <a class="btn btn-big" id="doneBtn" href="app.html" hidden>Done</a>

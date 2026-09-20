@@ -208,3 +208,16 @@
   .lift-scores strong { font-size: 1.25rem; }
   .lift-scores span { font-size: 0.7rem; }
 }
+
+/* ---------- live readout and measurements ---------- */
+.live-stats {
+  position: absolute; left: 12px; bottom: 12px; margin: 0; padding: 6px 12px; border-radius: 999px;
+  background: rgb(0 0 0 / 0.65); color: #fff; font-weight: 700; font-size: clamp(0.85rem, 1.6vw, 1.1rem);
+  font-variant-numeric: tabular-nums; white-space: pre;
+}
+.measures-wrap { margin: 22px 0 6px; overflow-x: auto; }
+.measures { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; }
+.measures th, .measures td { padding: 8px 10px; text-align: left; border-bottom: 1px solid var(--line); }
+.measures th { font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); font-weight: 600; }
+.measures td:last-child { font-weight: 800; }
+.small { font-size: 0.85rem; }
