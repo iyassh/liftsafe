@@ -2,8 +2,14 @@
 // its own copy on purpose so the lift check cannot be broken from here.
 import { PoseLandmarker, FilesetResolver } from '../vendor/mediapipe/vision_bundle.mjs';
 
-const BONES = [[11, 13], [13, 15], [12, 14], [14, 16], [11, 12], [11, 23], [12, 24], [23, 24],
-  [23, 25], [25, 27], [24, 26], [26, 28]];
+// The whole body the model sees: head, arms and hands, trunk, legs and feet.
+const BONES = [
+  [0, 7], [0, 8],
+  [11, 13], [13, 15], [15, 19], [12, 14], [14, 16], [16, 20],
+  [11, 12], [11, 23], [12, 24], [23, 24],
+  [23, 25], [25, 27], [24, 26], [26, 28],
+  [27, 29], [29, 31], [27, 31], [28, 30], [30, 32], [28, 32],
+];
 const JOINTS = [...new Set(BONES.flat())];
 
 let landmarkerPromise = null;

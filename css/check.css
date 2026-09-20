@@ -228,3 +228,23 @@
 .coach figure { margin: 0; }
 .coach canvas { display: block; width: 100%; aspect-ratio: 4 / 3; border-radius: var(--radius); border: 1px solid var(--line); background: var(--surface-2); }
 .coach figcaption { margin-top: 8px; font-weight: 700; text-align: center; }
+
+/* ---------- full screen ---------- */
+.full-btn {
+  position: absolute; right: 12px; bottom: 12px; padding: 8px 14px; border: 0; border-radius: 999px;
+  background: rgb(0 0 0 / 0.65); color: #fff; font: inherit; font-size: 0.9rem; font-weight: 700; cursor: pointer;
+}
+.full-btn:hover { background: rgb(0 0 0 / 0.85); }
+
+body.immersive { overflow: hidden; }
+body.immersive .topbar { display: none; }
+body.immersive .stage { position: fixed; inset: 0; z-index: 40; aspect-ratio: auto; border: 0; border-radius: 0; }
+/* The panel floats over the video, top right, large enough to read from across the room. */
+body.immersive .panel {
+  position: fixed; z-index: 41; top: 16px; right: 16px; width: min(360px, 34vw);
+  background: rgb(11 15 20 / 0.82); backdrop-filter: blur(6px);
+}
+body.immersive .stage-msg { font-size: clamp(2rem, 6vw, 5rem); }
+body.immersive .live-stats { font-size: clamp(1.1rem, 2.2vw, 1.8rem); left: 20px; bottom: 20px; }
+body.immersive .full-btn { right: 20px; bottom: 20px; }
+body.immersive .debug { z-index: 42; }

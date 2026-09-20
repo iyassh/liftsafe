@@ -44,6 +44,7 @@ const el = {
   dashLink: $('dashLink'),
   improved: $('improved'), coach: $('coach'), demoWrong: $('demoWrong'), demoRight: $('demoRight'),
   demoWrongLabel: $('demoWrongLabel'), demoRightLabel: $('demoRightLabel'),
+  fullBtn: $('fullBtn'),
   debug: $('debug'), liveStats: $('liveStats'), measures: $('measures'), voiceBtn: $('voiceBtn'),
 };
 const ctx = el.canvas.getContext('2d');
@@ -78,7 +79,10 @@ const band = (score) => (score >= 70 ? 'ok' : score >= 50 ? 'warn' : 'bad');
 
 function go(screen) {
   const leavingCamera = screen === 'results' || screen === 'name';
-  if (leavingCamera) stopSource();
+  if (leavingCamera) {
+    stopSource();
+    setImmersive(false);
+  }
   state.screen = screen;
   state.stopDemo?.();
   state.stopDemo = null;
@@ -435,6 +439,17 @@ function coachAloud(fault, now) {
   speak(FAULTS[fault].tip);
 }
 
+// Full screen: the camera fills the display and the panel floats over it, so the
+// feedback can be read from across the room. The layout is a body class; the
+// browser's own full-screen is a bonus and may be refused.
+function setImmersive(on) {
+  document.body.classList.toggle('immersive', on);
+  el.fullBtn.setAttribute('aria-pressed', String(on));
+  el.fullBtn.textContent = on ? '✕ Exit full screen' : '⛶ Full screen';
+  if (on && !document.fullscreenElement) document.documentElement.requestFullscreen?.().catch(() => {});
+  if (!on && document.fullscreenElement) document.exitFullscreen?.().catch(() => {});
+}
+
 function renderVoiceButton() {
   el.voiceBtn.textContent = voiceOn() ? '🔊 Voice on' : '🔇 Voice off';
 }
@@ -621,6 +636,9 @@ el.againBtn.addEventListener('click', tryAgain);
 el.voiceBtn.addEventListener('click', () => { setVoice(!voiceOn()); renderVoiceButton(); });
 renderVoiceButton();
 addEventListener('pagehide', stopSpeaking);
+el.fullBtn.addEventListener('click', () => setImmersive(!document.body.classList.contains('immersive')));
+// Esc leaves the browser's full screen; follow it so the layout never gets stuck.
+document.addEventListener('fullscreenchange', () => { if (!document.fullscreenElement) setImmersive(false); });
 el.video.addEventListener('loadedmetadata', syncCanvasSize);
 el.video.addEventListener('resize', syncCanvasSize);
 
